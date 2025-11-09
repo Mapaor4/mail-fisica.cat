@@ -4,14 +4,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
-  // Log all webhook requests for debugging
+  // Skip ALL middleware logic for webhooks - let them through immediately
   if (pathname.startsWith('/api/webhooks')) {
-    console.log('🔔 Middleware: Webhook request received', {
+    console.log('🔔 Middleware: Webhook request received - bypassing all checks', {
       path: pathname,
       method: request.method,
-      headers: Object.fromEntries(request.headers.entries()),
+      userAgent: request.headers.get('user-agent'),
       timestamp: new Date().toISOString(),
     });
+    return NextResponse.next();
   }
 
   let supabaseResponse = NextResponse.next({
@@ -67,11 +68,6 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard/inbox';
     return NextResponse.redirect(url);
-  }
-
-  // Log when webhook passes through middleware
-  if (pathname.startsWith('/api/webhooks')) {
-    console.log('✅ Middleware: Webhook allowed to pass through');
   }
 
   return supabaseResponse;
