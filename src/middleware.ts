@@ -6,12 +6,16 @@ export async function middleware(request: NextRequest) {
   
   // Skip ALL middleware logic for webhooks - let them through immediately
   if (pathname.startsWith('/api/webhooks')) {
-    console.log('🔔 Middleware: Webhook request received - bypassing all checks', {
-      path: pathname,
-      method: request.method,
-      userAgent: request.headers.get('user-agent'),
-      timestamp: new Date().toISOString(),
-    });
+    console.log('='.repeat(80));
+    console.log('🔔 MIDDLEWARE: WEBHOOK REQUEST DETECTED');
+    console.log('📍 Path:', pathname);
+    console.log('📍 Method:', request.method);
+    console.log('📍 User-Agent:', request.headers.get('user-agent'));
+    console.log('📍 Content-Type:', request.headers.get('content-type'));
+    console.log('📍 All Headers:', JSON.stringify(Object.fromEntries(request.headers.entries()), null, 2));
+    console.log('📍 Timestamp:', new Date().toISOString());
+    console.log('✅ BYPASSING ALL MIDDLEWARE - Passing through to route handler');
+    console.log('='.repeat(80));
     return NextResponse.next();
   }
 
