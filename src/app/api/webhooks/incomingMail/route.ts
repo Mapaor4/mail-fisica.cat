@@ -63,8 +63,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('WEBHOOK HANDLER STARTED');
+    console.log('🎯 WEBHOOK POST HANDLER STARTED');
+    console.log('🔑 Service Role Key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('🔑 Supabase URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    
     const supabase = getSupabaseServiceClient();
+    console.log('✅ Supabase client created');
     
     // Log the raw request for debugging
     const rawBody = await request.text();
