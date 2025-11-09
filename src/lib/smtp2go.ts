@@ -1,0 +1,37 @@
+import { SendEmailRequest } from './types';
+
+const SMTP2GO_API_URL = 'https://api.smtp2go.com/v3/email/send';
+
+export async function sendEmailViaSMTP2GO(email: SendEmailRequest) {
+  const apiKey = process.env.SMTP2GO_API_KEY;
+  const senderEmail = process.env.SMTP2GO_SENDER_EMAIL || 'alias@fisica.cat';
+
+  if (!apiKey) {
+    throw new Error('SMTP2GO_API_KEY is not configured');
+  }
+
+  const payload = {
+    api_key: apiKey,
+    to: [email.to],
+    sender: senderEmail,
+    subject: email.subject,
+    text_body: email.body,
+    html_body: email.html_body || email.body.replace(/\n/g, '<br>'),
+  };
+
+  const response = await fetch(SMTP2GO_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`SMTP2GO API error: ${errorData.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
