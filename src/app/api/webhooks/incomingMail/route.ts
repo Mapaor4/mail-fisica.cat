@@ -67,66 +67,51 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const timestamp = new Date().toISOString();
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  console.log('='.repeat(80));
+  console.log(`🎯 WEBHOOK POST RECEIVED - ${timestamp}`);
+  console.log(`📋 Request ID: ${requestId}`);
+  console.log('='.repeat(80));
+  
   try {
-    console.log('🎯 WEBHOOK POST HANDLER STARTED');
-    console.log('🔑 Service Role Key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    console.log('🔑 Supabase URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    // Log EVERYTHING about the request first
+    const url = request.url;
+    const method = request.method;
+    const headers = Object.fromEntries(request.headers.entries());
+    
+    console.log('📍 URL:', url);
+    console.log('📍 Method:', method);
+    console.log('📍 Headers:', JSON.stringify(headers, null, 2));
+    
+    // Read the body
+    const rawBody = await request.text();
+    console.log('📍 Body Length:', rawBody.length);
+    console.log('📍 Raw Body:', rawBody.substring(0, 1000)); // First 1000 chars
+    
+    // Try to parse body
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(rawBody);
+      console.log('✅ Body is valid JSON');
+      console.log('📍 Parsed Body:', JSON.stringify(parsedBody, null, 2));
+    } catch (e) {
+      console.log('⚠️  Body is not JSON');
+      parsedBody = { raw: rawBody };
+    }
+    
+    console.log('='.repeat(80));
+    console.log('🔑 Environment Check:');
+    console.log('- Service Role Key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('- Supabase URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('='.repeat(80));
     
     const supabase = getSupabaseServiceClient();
     console.log('✅ Supabase client created');
     
-    // Log the raw request for debugging
-    const rawBody = await request.text();
-    console.log('📨 Webhook received:', {
-      url: request.url,
-      method: request.method,
-      headers: Object.fromEntries(request.headers.entries()),
-      bodyLength: rawBody.length,
-      bodyPreview: rawBody.substring(0, 500), // Log first 500 chars
-    });
-
-    // Parse the body - accept both JSON and form data
-    let body;
-    const contentType = request.headers.get('content-type') || '';
-    
-    if (contentType.includes('application/json')) {
-      try {
-        body = JSON.parse(rawBody);
-        console.log('✅ Parsed as JSON');
-      } catch (e) {
-        console.error('❌ Failed to parse JSON:', e);
-        return NextResponse.json(
-          { error: 'Invalid JSON in request body', raw: rawBody.substring(0, 200) },
-          { status: 400 }
-        );
-      }
-    } else if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
-      // Parse form data
-      console.log('📝 Parsing as form data');
-      const formData = new URLSearchParams(rawBody);
-      body = Object.fromEntries(formData.entries());
-      console.log('✅ Parsed as form data');
-    } else {
-      // Try JSON anyway
-      try {
-        body = JSON.parse(rawBody);
-        console.log('✅ Parsed as JSON (no content-type header)');
-      } catch {
-        console.error('❌ Unknown content type and not valid JSON:', contentType);
-        return NextResponse.json(
-          { 
-            error: 'Unsupported content type',
-            contentType,
-            hint: 'Send as application/json or application/x-www-form-urlencoded',
-            rawBody: rawBody.substring(0, 200)
-          },
-          { status: 400 }
-        );
-      }
-    }
-
-    // ForwardEmail sends a specific format based on their docs
-    console.log('📧 Parsed email data:', JSON.stringify(body, null, 2));
+    // Now process the parsed body
+    const body = parsedBody;
 
     // Extract email fields from ForwardEmail's format
     // ForwardEmail sends: { from: { value: [{ address, name }], text }, recipients: [...], text, html, ... }
