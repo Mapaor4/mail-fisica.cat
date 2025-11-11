@@ -11,9 +11,12 @@ export async function sendEmailViaSMTP2GO(email: SendEmailRequest) {
     throw new Error('SMTP2GO_API_KEY is not configured');
   }
 
+  // Ensure 'to' is always an array
+  const recipients = Array.isArray(email.to) ? email.to : [email.to];
+
   const payload = {
     api_key: apiKey,
-    to: [email.to],
+    to: recipients,
     sender: senderEmail,
     subject: email.subject,
     text_body: email.body,

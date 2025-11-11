@@ -71,13 +71,16 @@ export default function ComposePage() {
               </label>
               <input
                 id="to"
-                type="email"
+                type="text"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 placeholder="recipient@example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 disabled={isSending}
               />
+              {/* <p className="mt-1 text-xs text-gray-500">
+                Separate multiple recipients with commas (,) or semicolons (;)
+              </p> */}
             </div>
 
             {/* Subject Field */}

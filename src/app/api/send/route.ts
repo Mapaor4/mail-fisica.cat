@@ -94,9 +94,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Parse 'to' field to support multiple recipients (comma or semicolon separated)
+    let recipients: string | string[] = to;
+    if (typeof to === 'string') {
+      // Split by comma or semicolon and trim whitespace
+      const parsedRecipients = to
+        .split(/[,;]/)
+        .map(email => email.trim())
+        .filter(email => email.length > 0);
+      
+      // Validate all email addresses
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const invalidEmails = parsedRecipients.filter(email => !emailRegex.test(email));
+      
+      if (invalidEmails.length > 0) {
+        return NextResponse.json(
+          { error: 'Invalid email address(es)', details: invalidEmails.join(', ') },
+          { status: 400 }
+        );
+      }
+      
+      recipients = parsedRecipients.length > 1 ? parsedRecipients : parsedRecipients[0];
+    }
+
     // Send email via SMTP2GO using user's email as sender
     const smtp2goResponse = await sendEmailViaSMTP2GO({
-      to,
+      to: recipients,
       subject,
       body: emailBody,
       html_body,
@@ -109,7 +132,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         from_email: profile.email,
-        to_email: to,
+        to_email: Array.isArray(recipients) ? recipients.join(', ') : recipients,
         subject: subject,
         body: emailBody,
         html_body: html_body || emailBody.replace(/\n/g, '<br>'),

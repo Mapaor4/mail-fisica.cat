@@ -23,7 +23,7 @@ export interface Email {
 }
 
 export interface SendEmailRequest {
-  to: string;
+  to: string | string[]; // Support single email or array of emails
   subject: string;
   body: string;
   html_body?: string;
