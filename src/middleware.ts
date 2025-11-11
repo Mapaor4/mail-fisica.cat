@@ -56,8 +56,7 @@ export async function middleware(request: NextRequest) {
     !user &&
     !pathname.startsWith('/sign-in') &&
     !pathname.startsWith('/sign-up') &&
-    !pathname.startsWith('/api/webhooks') && // Allow webhooks without auth
-    pathname !== '/api/registration-status' // Allow registration status check without auth
+    !pathname.startsWith('/api/webhooks') // Allow webhooks without auth
   ) {
     const url = request.nextUrl.clone();
     url.pathname = '/sign-in';
