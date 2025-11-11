@@ -29,10 +29,10 @@ export function buildForwardEmailDNS(alias: string, forwardTo?: string): string 
   const webhookUrl = `https://mail.fisica.cat/api/webhooks/incomingMail`;
   
   if (forwardTo) {
-    return `forward-email=${alias}:${forwardTo},${alias}:${webhookUrl}`;
+    return `"forward-email=${alias}:${forwardTo},${alias}:${webhookUrl}"`;
   }
   
-  return `forward-email=${alias}:${webhookUrl}`;
+  return `"forward-email=${alias}:${webhookUrl}"`;
 }
 
 /**
