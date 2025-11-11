@@ -77,8 +77,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-2xl mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6">Settings</h1>
 
       {/* Profile Info */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -169,6 +170,7 @@ export default function SettingsPage() {
           <li>You can disable forwarding at any time by clearing the field</li>
           <li>Forwarding uses DNS configuration and may take a few minutes to propagate</li>
         </ul>
+      </div>
       </div>
     </div>
   );
