@@ -61,6 +61,8 @@ export async function GET() {
 
 // DELETE - Delete a user (admin only)
 export async function DELETE(request: NextRequest) {
+  console.log('DELETE /api/users called');
+  
   try {
     const supabase = await createClient();
     
@@ -68,6 +70,8 @@ export async function DELETE(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    console.log('User authenticated:', !!user);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
