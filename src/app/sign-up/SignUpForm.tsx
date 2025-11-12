@@ -17,6 +17,7 @@ export default function SignUpForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [forwardTo, setForwardTo] = useState('');
+  const [orgPassphrase, setOrgPassphrase] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingAlias, setCheckingAlias] = useState(false);
@@ -107,6 +108,28 @@ export default function SignUpForm() {
     setLoading(true);
     setError(null);
     setDnsWarning(null);
+
+    // Step 0: Verify organization passphrase (if enabled)
+    try {
+      const passphraseResponse = await fetch('/api/verify-passphrase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passphrase: orgPassphrase }),
+      });
+
+      const passphraseResult = await passphraseResponse.json();
+
+      if (!passphraseResult.ok) {
+        setError(passphraseResult.error || 'Invalid organization passphrase');
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Error verifying passphrase:', err);
+      setError('Unable to verify passphrase. Please try again.');
+      setLoading(false);
+      return;
+    }
 
     // Validation
     if (alias.length < 2) {
@@ -294,6 +317,29 @@ export default function SignUpForm() {
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Automatically forward incoming emails to another address
+          </p>
+        </div>
+
+        {/* Organization Passphrase Field */}
+        <div>
+          <label htmlFor="orgPassphrase" className="block text-sm font-medium text-gray-700 mb-2">
+            Organization Passphrase *
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              id="orgPassphrase"
+              type="password"
+              value={orgPassphrase}
+              onChange={(e) => setOrgPassphrase(e.target.value)}
+              placeholder="Enter organization passphrase"
+              required
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              disabled={loading}
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Required to create an account
           </p>
         </div>
 
