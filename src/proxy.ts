@@ -1,21 +1,12 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
   // Skip ALL middleware logic for webhooks - let them through immediately
   if (pathname.startsWith('/api/webhooks')) {
-    console.log('='.repeat(80));
-    // console.log('🔔 MIDDLEWARE: WEBHOOK REQUEST DETECTED');
-    // console.log('📍 Path:', pathname);
-    // console.log('📍 Method:', request.method);
-    // console.log('📍 User-Agent:', request.headers.get('user-agent'));
-    // console.log('📍 Content-Type:', request.headers.get('content-type'));
-    // console.log('📍 All Headers:', JSON.stringify(Object.fromEntries(request.headers.entries()), null, 2));
-    // console.log('📍 Timestamp:', new Date().toISOString());
-    // console.log('✅ BYPASSING ALL MIDDLEWARE - Passing through to route handler');
-    // console.log('='.repeat(80));
+    console.log('MIDDLEWARE: WEBHOOK REQUEST DETECTED');
     return NextResponse.next();
   }
 
