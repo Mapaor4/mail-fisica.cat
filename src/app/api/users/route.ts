@@ -59,7 +59,7 @@ export async function GET() {
   }
 }
 
-// DELETE - Delete a user (admin only)
+// DELETE - Delete a user (admin only, or self-deletion)
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -73,20 +73,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile || profile.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
     const { userId } = body;
 
@@ -97,16 +83,35 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Prevent admin from deleting themselves
-    if (userId === user.id) {
+    // Use admin client to bypass RLS
+    const supabaseAdmin = createAdminClient();
+    
+    // Get current user's profile
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
       return NextResponse.json(
-        { error: 'Cannot delete your own account' },
-        { status: 400 }
+        { error: 'Profile not found' },
+        { status: 404 }
       );
     }
 
-    // Get the user's profile to find their alias (use admin client to bypass RLS)
-    const supabaseAdmin = createAdminClient();
+    // Check permissions: users can only delete themselves, admins can delete anyone except other admins
+    const isSelfDeletion = userId === user.id;
+    const isAdmin = profile.role === 'admin';
+
+    if (!isSelfDeletion && !isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden: You can only delete your own account' },
+        { status: 403 }
+      );
+    }
+
+    // Get the target user's profile
     const { data: targetProfile, error: targetProfileError } = await supabaseAdmin
       .from('profiles')
       .select('alias, role')
@@ -120,8 +125,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Prevent deleting other admins
-    if (targetProfile.role === 'admin') {
+    // Allow users to delete themselves, but prevent admins from deleting other admins
+    if (!isSelfDeletion && targetProfile.role === 'admin') {
       return NextResponse.json(
         { error: 'Cannot delete other admin accounts' },
         { status: 400 }

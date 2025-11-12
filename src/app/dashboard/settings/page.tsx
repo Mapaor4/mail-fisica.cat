@@ -1,15 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const supabase = createClient();
   const [profile, setProfile] = useState<{ alias: string; email: string; forward_to: string | null } | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [forwardTo, setForwardTo] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -18,6 +25,13 @@ export default function SettingsPage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
+      
+      // Get user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+      
       const response = await fetch('/api/forwarding');
       const data = await response.json();
 
@@ -67,6 +81,41 @@ export default function SettingsPage() {
       setMessage({ type: 'error', text: 'Failed to update forwarding' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!userId) {
+      setMessage({ type: 'error', text: 'User ID not found' });
+      return;
+    }
+
+    setDeleting(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Sign out and redirect
+        await supabase.auth.signOut();
+        router.push('/sign-in');
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to delete account' });
+        setDeleting(false);
+        setShowDeleteConfirm(false);
+      }
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      setMessage({ type: 'error', text: 'Failed to delete account' });
+      setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -172,6 +221,52 @@ export default function SettingsPage() {
           <li>You can disable forwarding at any time by clearing the field</li>
           <li>Forwarding uses DNS configuration and may take a few minutes to propagate</li>
         </ul>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="mt-8 bg-white rounded-lg shadow p-6 border-2 border-red-200">
+        <h2 className="text-xl font-semibold text-red-600 mb-4">Danger Zone</h2>
+        <p className="text-gray-600 mb-4">
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleting}
+            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Delete Account
+          </button>
+        ) : (
+          <div className="space-y-4">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800 font-semibold mb-2">
+                ⚠️ Are you absolutely sure?
+              </p>
+              <p className="text-sm text-red-700">
+                This will permanently delete your account <span className="font-mono">{profile?.email}</span>, 
+                all your emails, and remove your DNS records. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete My Account'}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       </div>
     </div>
