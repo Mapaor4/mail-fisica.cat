@@ -61,8 +61,8 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
       {/* Body */}
       <div className="flex-1 overflow-auto px-6 py-4">
         {email.html_body ? (
-          <div 
-            className="prose prose-sm max-w-none dark:prose-invert"
+          <div
+            className="prose prose-sm max-w-none dark:prose-invert dark:text-gray-300!"
             dangerouslySetInnerHTML={{ __html: email.html_body }}
           />
         ) : (
