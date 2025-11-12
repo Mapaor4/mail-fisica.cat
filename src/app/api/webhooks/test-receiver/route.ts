@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       console.log('Form Data:', JSON.stringify(formObject, null, 2));
     }
     
-    console.log('✅ TEST WEBHOOK RECEIVER - Processing complete');
+    // console.log('TEST WEBHOOK RECEIVER - Processing complete');
     
     return NextResponse.json(
       { 

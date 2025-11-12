@@ -22,7 +22,7 @@ const getSupabaseServiceClient = () => {
 
 // GET endpoint to monitor recent webhook deliveries
 export async function GET(request: NextRequest) {
-  console.log('📊 GET request to webhook endpoint');
+  console.log('GET request to webhook endpoint');
   try {
     const supabase = getSupabaseServiceClient();
     const { searchParams } = new URL(request.url);
@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   console.log('='.repeat(80));
-  console.log(`🎯 WEBHOOK POST RECEIVED - ${timestamp}`);
-  console.log(`📋 Request ID: ${requestId}`);
+  console.log(`WEBHOOK POST RECEIVED - ${timestamp}`);
+  console.log(`Request ID: ${requestId}`);
   console.log('='.repeat(80));
   
   try {
@@ -83,34 +83,34 @@ export async function POST(request: NextRequest) {
     const method = request.method;
     const headers = Object.fromEntries(request.headers.entries());
     
-    console.log('📍 URL:', url);
-    console.log('📍 Method:', method);
-    console.log('📍 Headers:', JSON.stringify(headers, null, 2));
+    console.log('URL:', url);
+    console.log('Method:', method);
+    console.log('Headers:', JSON.stringify(headers, null, 2));
     
     // Read the body
     const rawBody = await request.text();
-    console.log('📍 Body Length:', rawBody.length);
-    console.log('📍 Raw Body:', rawBody.substring(0, 1000)); // First 1000 chars
+    console.log('Body Length:', rawBody.length);
+    console.log('Raw Body:', rawBody.substring(0, 1000)); // First 1000 chars
     
     // Try to parse body
     let parsedBody;
     try {
       parsedBody = JSON.parse(rawBody);
-      console.log('✅ Body is valid JSON');
-      console.log('📍 Parsed Body:', JSON.stringify(parsedBody, null, 2));
+      console.log('Body is valid JSON');
+      console.log('Parsed Body:', JSON.stringify(parsedBody, null, 2));
     } catch {
-      console.log('⚠️  Body is not JSON');
+      console.log('Body is not JSON');
       parsedBody = { raw: rawBody };
     }
     
     console.log('='.repeat(80));
-    console.log('🔑 Environment Check:');
+    console.log('Environment Check:');
     console.log('- Service Role Key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
     console.log('- Supabase URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
     console.log('='.repeat(80));
     
     const supabase = getSupabaseServiceClient();
-    console.log('✅ Supabase client created');
+    console.log('Supabase client created');
     
     // Now process the parsed body
     const body = parsedBody;
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     const attachments = body.attachments || [];
 
     // Log extracted fields for debugging
-    console.log('📋 Extracted fields:', { fromEmail, toEmail, subject, hasText: !!text, hasHtml: !!html });
+    // console.log('Extracted fields:', { fromEmail, toEmail, subject, hasText: !!text, hasHtml: !!html });
 
     // Validate required fields
     if (!fromEmail || !toEmail) {
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     // Deduplicate and normalize
     recipients = Array.from(new Set(recipients.map((r: string) => r.toLowerCase())));
 
-    console.log('🔍 Resolved recipients:', recipients);
+    // console.log('Resolved recipients:', recipients);
 
     // Prepare inserts for all found users; track misses
   const inserts: Array<Record<string, unknown>> = [];
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
     for (const rec of recipients) {
       try {
         const alias = String(rec).split('@')[0];
-        console.log('� Looking up profile for alias:', alias);
+        // console.log('Looking up profile for alias:', alias);
 
         // Use maybeSingle() to avoid PGRST116 when no rows
         const { data: profile, error: profileError } = await supabase
@@ -202,12 +202,12 @@ export async function POST(request: NextRequest) {
         }
 
         if (!profile) {
-          console.warn('⚠️  No profile found for alias:', alias);
+          console.warn('⚠️ No profile found for alias:', alias);
           missed.push(rec);
           continue;
         }
 
-        console.log('✅ Found profile:', { id: profile.id, alias: profile.alias, email: profile.email });
+        // console.log('Found profile:', { id: profile.id, alias: profile.alias, email: profile.email });
 
         inserts.push({
           user_id: profile.id,
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
     }
 
     // data is an array of inserted rows
-    console.log('✅ Emails stored successfully. Count:', Array.isArray(data) ? data.length : 1);
+    // console.log('Emails stored successfully. Count:', Array.isArray(data) ? data.length : 1);
 
     type InsertedRow = { id: string | number; user_id: string | number; to_email: string };
     const created: InsertedRow[] = Array.isArray(data)

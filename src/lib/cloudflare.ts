@@ -55,7 +55,7 @@ export async function createForwardEmailDNS(
   const content = buildForwardEmailDNS(alias, forwardTo);
 
   try {
-    console.log('🌐 Creating Cloudflare DNS record:', { alias, content });
+    console.log('Creating Cloudflare DNS record:', { alias, content });
 
     const response = await fetch(
       `${CLOUDFLARE_API_URL}/zones/${CLOUDFLARE_ZONE_ID}/dns_records`,
@@ -85,14 +85,14 @@ export async function createForwardEmailDNS(
       };
     }
 
-    console.log('✅ DNS record created successfully:', data.result.id);
+    console.log('DNS record created successfully:', data.result.id);
 
     return {
       success: true,
       record: data.result,
     };
   } catch (error) {
-    console.error('💥 Error creating DNS record:', error);
+    console.error('Error creating DNS record:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

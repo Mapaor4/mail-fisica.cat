@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       messageId: `test-${Date.now()}@test.mail.${APEX_DOMAIN}`,
     };
 
-    console.log('🧪 Sending test email to webhook:', testEmail);
+    console.log('Sending test email to webhook:', testEmail);
 
     const webhookResponse = await fetch(webhookUrl, {
       method: 'POST',

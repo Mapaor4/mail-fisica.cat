@@ -151,18 +151,18 @@ export async function DELETE(request: NextRequest) {
         });
 
         if (userRecord?.id) {
-          console.log(`🗑️ Deleting DNS record for ${targetProfile.alias} (ID: ${userRecord.id})`);
+          console.log(`Deleting DNS record for ${targetProfile.alias} (ID: ${userRecord.id})`);
           const deleteResult = await deleteForwardEmailDNS(userRecord.id);
           
           if (deleteResult.success) {
             dnsDeleted = true;
-            console.log(`✅ DNS record deleted successfully`);
+            console.log(`DNS record deleted successfully`);
           } else {
             dnsError = deleteResult.error;
-            console.error(`❌ Failed to delete DNS record:`, deleteResult.error);
+            console.error(`Failed to delete DNS record:`, deleteResult.error);
           }
         } else {
-          console.log(`⚠️ No DNS record found for ${targetProfile.alias}`);
+          console.log(`No DNS record found for ${targetProfile.alias}`);
         }
       }
     } catch (error) {
