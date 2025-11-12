@@ -7,10 +7,11 @@ A minimalistic, modern email dashboard for sending and receiving mail at a custo
 - Multi-user authentication
 - Receive emails at alias@yourdomain.com (and optionally forward them to your personal Gmail, Outlook, etc. inboxes)
 - Send emails from your domain manually using SMTP2GO (alias@yourdomain.com).
-- Send automated emails from a subdomain (alias@mg.yourdomain.com)
+- If you want you can still send automated emails from a subdomain (alias@mg.yourdomain.com)
 - Role-based access (admin or user roles)
 - Row Level Security (users only see their own emails)
 - Admin dashboard for user management (delete users and their DNS records)
+- Dark mode available
 - Nice minimalistic UI and refresh buttons for real-time updates.
 
 ### Tech used
@@ -21,6 +22,12 @@ A minimalistic, modern email dashboard for sending and receiving mail at a custo
 - SMTP2GO for sending emails manually
 - (Optionally) Mailgun for sending automated emails.
 - Cloudflare dashboard and Cloudflare API for managing DNS
+
+### Context
+
+If you have a domain, you can send and receive mails at your domain for free! There are multiple ways of doing that, one would be to set up your own mail server (self-hosted options like Postfix or similar), the problem is that is hard to achieve and maintain good email reputation for your domain and server IP. Another option would be to use Zoho or other mail providers, but their free tier, as generous as it is, is normally limited to a specific number of accounts (or aliases) and lot's of features (like email routing, webhooks, etc.) are only available as paid plans.
+
+Then what does this repository do? It uses already existing and popular services like ForwardEmail (for receiving emails) SMPT2GO (for sending emails), Cloudflare (for managing DNS), Vercel (for hosting the NextJS web app) or Supabase (for hosting the database), allowing for a totally customizable email dashboard for sending and receiving emails at your apex domain.
 
 ## Getting Started
 
