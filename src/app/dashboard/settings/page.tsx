@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
+const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'fisica.cat';
+
 export default function SettingsPage() {
   const [profile, setProfile] = useState<{ alias: string; email: string; forward_to: string | null } | null>(null);
   const [forwardTo, setForwardTo] = useState('');
@@ -165,7 +167,7 @@ export default function SettingsPage() {
       <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
         <h3 className="font-semibold mb-2">How it works</h3>
         <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-          <li>Emails sent to your fisica.cat address will be stored in your inbox</li>
+          <li>Emails sent to your {APEX_DOMAIN} address will be stored in your inbox</li>
           <li>If forwarding is enabled, emails will also be sent to your external address</li>
           <li>You can disable forwarding at any time by clearing the field</li>
           <li>Forwarding uses DNS configuration and may take a few minutes to propagate</li>

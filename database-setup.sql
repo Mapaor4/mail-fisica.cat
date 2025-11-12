@@ -36,6 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_emails_to ON emails(to_email);
 -- ===================
 
 -- Create profiles table (linked to Supabase auth.users)
+-- IMPORTANT NOTE: The email field needs to be edited with your actual domain
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   alias TEXT UNIQUE NOT NULL,

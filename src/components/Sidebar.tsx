@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types/auth';
 
+const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'fisica.cat';
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -64,7 +66,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-900">fisica.cat</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{APEX_DOMAIN}</h1>
         <p className="text-sm text-gray-500 mt-1">Mail Dashboard</p>
       </div>
 

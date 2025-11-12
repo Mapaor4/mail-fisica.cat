@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import { Activity, CheckCircle, XCircle, Clock } from 'lucide-react';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mail.fisica.cat';
+const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'fisica.cat';
+
 interface WebhookLog {
   id: string;
   from: string;
@@ -77,7 +80,7 @@ export default function WebhookMonitorPage() {
                   Configure ForwardEmail to POST to:
                 </p>
                 <code className="block bg-blue-100 text-blue-900 px-3 py-2 rounded text-sm font-mono">
-                  https://mail.fisica.cat/api/webhooks/incomingMail
+                  {SITE_URL}/api/webhooks/incomingMail
                 </code>
                 <p className="text-xs text-blue-700 mt-2">
                   💡 Tip: This page shows recent webhook deliveries. Send a test email to see it appear here!
@@ -102,7 +105,7 @@ export default function WebhookMonitorPage() {
               <Clock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No webhooks received yet</h3>
               <p className="text-gray-600 mb-4">
-                Send a test email to alias@fisica.cat to see it appear here
+                Send a test email to alias@{APEX_DOMAIN} to see it appear here
               </p>
               <button
                 onClick={() => fetchLogs(true)}
@@ -165,7 +168,7 @@ export default function WebhookMonitorPage() {
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h4 className="font-semibold text-gray-900 mb-2">Testing the Webhook</h4>
             <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-              <li>Send an email to <strong>alias@fisica.cat</strong></li>
+              <li>Send an email to <strong>alias@{APEX_DOMAIN}</strong></li>
               <li>Wait a few seconds for ForwardEmail to process it</li>
               <li>Click the Refresh button above</li>
               <li>Your email should appear in this list</li>

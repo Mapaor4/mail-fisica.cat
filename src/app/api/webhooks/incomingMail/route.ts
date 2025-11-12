@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+const APEX_DOMAIN = process.env.APEX_DOMAIN || 'fisica.cat';
+
 // Ensure this route can handle POST requests
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
       parsedBody = JSON.parse(rawBody);
       console.log('✅ Body is valid JSON');
       console.log('📍 Parsed Body:', JSON.stringify(parsedBody, null, 2));
-    } catch (e) {
+    } catch {
       console.log('⚠️  Body is not JSON');
       parsedBody = { raw: rawBody };
     }
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get recipient from recipients array or session
-    let toEmail = 'alias@fisica.cat';
+    let toEmail = `alias@${APEX_DOMAIN}`;
     if (body.recipients && Array.isArray(body.recipients) && body.recipients.length > 0) {
       toEmail = body.recipients[0];
     } else if (body.session?.recipient) {

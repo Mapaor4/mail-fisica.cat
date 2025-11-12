@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { buildForwardEmailDNS } from '@/lib/cloudflare';
 
+const APEX_DOMAIN = process.env.APEX_DOMAIN || 'fisica.cat';
+
 // Cloudflare API Configuration
 const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
 
@@ -165,7 +167,7 @@ async function updateCloudflareDNS(
 
   // List existing TXT records for forward-email
   const listResponse = await fetch(
-    `${CLOUDFLARE_API_BASE}/zones/${zoneId}/dns_records?type=TXT&name=fisica.cat`,
+    `${CLOUDFLARE_API_BASE}/zones/${zoneId}/dns_records?type=TXT&name=${APEX_DOMAIN}`,
     { headers }
   );
 

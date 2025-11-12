@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+const APEX_DOMAIN = process.env.APEX_DOMAIN || 'fisica.cat';
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
       subject: 'Test Email from Webhook Tester',
       text: `This is a test email sent at ${new Date().toISOString()}\n\nIf you see this in your inbox, your webhook is working correctly!`,
       html: `<p>This is a test email sent at ${new Date().toISOString()}</p><p>If you see this in your inbox, your webhook is working correctly!</p>`,
-      messageId: `test-${Date.now()}@test.mail.fisica.cat`,
+      messageId: `test-${Date.now()}@test.mail.${APEX_DOMAIN}`,
     };
 
     console.log('🧪 Sending test email to webhook:', testEmail);
@@ -89,7 +91,7 @@ export async function GET() {
       example: {
         method: 'POST',
         body: {
-          to: 'alias@fisica.cat (optional)',
+          to: `alias@${APEX_DOMAIN} (optional)`,
         },
       },
       quick_test: 'Or just POST with an empty body {}',

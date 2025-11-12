@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, User, AlertCircle, CheckCircle, Forward } from 'lucide-react';
 
+const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'fisica.cat';
+
 /**
  * Sign Up Form Component - Client Component
  * Handles all interactive form logic including alias checking and user creation
@@ -105,7 +107,7 @@ export default function SignUpForm() {
       return;
     }
 
-    const email = `${alias}@fisica.cat`;
+    const email = `${alias}@${APEX_DOMAIN}`;
 
     try {
       // Step 1: Create Supabase auth user
@@ -199,7 +201,7 @@ export default function SignUpForm() {
             )}
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Your email will be: <strong>{alias || 'alias'}@fisica.cat</strong>
+            Your email will be: <strong>{alias || 'alias'}@{APEX_DOMAIN}</strong>
           </p>
           {aliasAvailable === false && (
             <p className="text-sm text-red-600 mt-1">This alias is already taken</p>

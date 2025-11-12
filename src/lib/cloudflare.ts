@@ -5,6 +5,8 @@
 const CLOUDFLARE_API_KEY = process.env.CLOUDFLARE_API_KEY;
 const CLOUDFLARE_ZONE_ID = process.env.CLOUDFLARE_ZONE_ID;
 const CLOUDFLARE_API_URL = 'https://api.cloudflare.com/client/v4';
+const APEX_DOMAIN = process.env.APEX_DOMAIN || 'fisica.cat';
+const SITE_URL = process.env.SITE_URL || 'https://mail.fisica.cat';
 
 interface CloudflareDNSRecord {
   id?: string;
@@ -26,7 +28,7 @@ export function isAutoRegisterEnabled(): boolean {
  * Build ForwardEmail DNS record content
  */
 export function buildForwardEmailDNS(alias: string, forwardTo?: string): string {
-  const webhookUrl = `https://mail.fisica.cat/api/webhooks/incomingMail`;
+  const webhookUrl = `${SITE_URL}/api/webhooks/incomingMail`;
   
   if (forwardTo) {
     return `"forward-email=${alias}:${forwardTo},${alias}:${webhookUrl}"`;
@@ -65,7 +67,7 @@ export async function createForwardEmailDNS(
         },
         body: JSON.stringify({
           type: 'TXT',
-          name: '@', // Root domain (fisica.cat)
+          name: '@', // Root domain
           content,
           ttl: 3600,
           proxied: false, // Only DNS, no Cloudflare proxy
@@ -115,7 +117,7 @@ export async function listForwardEmailDNS(): Promise<{
 
   try {
     const response = await fetch(
-      `${CLOUDFLARE_API_URL}/zones/${CLOUDFLARE_ZONE_ID}/dns_records?type=TXT&name=fisica.cat`,
+      `${CLOUDFLARE_API_URL}/zones/${CLOUDFLARE_ZONE_ID}/dns_records?type=TXT&name=${APEX_DOMAIN}`,
       {
         method: 'GET',
         headers: {

@@ -2,6 +2,8 @@ import { isAutoRegisterEnabled } from '@/lib/cloudflare';
 import SignUpForm from './SignUpForm';
 import RegistrationClosed from './RegistrationClosed';
 
+const APEX_DOMAIN = process.env.APEX_DOMAIN || 'fisica.cat';
+
 /**
  * Sign Up Page - Server Component
  * Checks registration status at build/request time to avoid client-side flash
@@ -14,7 +16,7 @@ export default function SignUpPage() {
       <div className="max-w-md w-full">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">fisica.cat</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">{APEX_DOMAIN}</h1>
           <p className="text-gray-600">
             {registrationEnabled ? 'Create your email account' : 'Registration Status'}
           </p>

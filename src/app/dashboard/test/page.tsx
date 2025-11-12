@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Header from '@/components/Header';
 import { Send, CheckCircle, XCircle, Info } from 'lucide-react';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://mail.fisica.cat';
+
 export default function TestWebhookPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string; email_id?: string } | null>(null);
@@ -122,7 +124,7 @@ export default function TestWebhookPage() {
                 <p className="font-medium text-gray-900">✅ Test email appears in inbox:</p>
                 <p>Your webhook is working! Configure ForwardEmail to send POST requests to:</p>
                 <code className="block bg-gray-100 text-gray-900 px-3 py-2 rounded mt-1 text-xs">
-                  https://mail.fisica.cat/api/webhooks/incomingMail
+                  {SITE_URL}/api/webhooks/incomingMail
                 </code>
               </div>
 

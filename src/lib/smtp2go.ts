@@ -1,10 +1,11 @@
 import { SendEmailRequest } from './types';
 
 const SMTP2GO_API_URL = 'https://api.smtp2go.com/v3/email/send';
+const APEX_DOMAIN = process.env.APEX_DOMAIN || 'fisica.cat';
 
 export async function sendEmailViaSMTP2GO(email: SendEmailRequest) {
   const apiKey = process.env.SMTP2GO_API_KEY;
-  const defaultSenderEmail = 'default@fisica.cat';
+  const defaultSenderEmail = `default@${APEX_DOMAIN}`;
   const senderEmail = email.from || defaultSenderEmail; // Use provided sender or default
 
   if (!apiKey) {
