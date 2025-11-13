@@ -111,9 +111,9 @@ export default function UserManagementPage() {
           {/* Info Card */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
-              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+              {/* <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" /> */}
               <div>
-                <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">User Management</h3>
+                {/* <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">User Management</h3> */}
                 <p className="text-sm text-blue-800 dark:text-blue-400">
                   Manage users in your system. Deleting a user will remove their account, emails, and Cloudflare DNS records.
                 </p>
@@ -294,10 +294,10 @@ export default function UserManagementPage() {
           {/* Warning Note */}
           <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5 shrink-0" />
+              {/* <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5 shrink-0" /> */}
               <div>
-                <h4 className="font-semibold text-yellow-900 dark:text-yellow-300 mb-1">Important Notes</h4>
-                <ul className="text-sm text-yellow-800 dark:text-yellow-400 space-y-1 list-disc list-inside">
+                <h4 className="font-semibold text-yellow-900 dark:text-yellow-500 mb-1">Warning note</h4>
+                <ul className="text-sm text-yellow-800 dark:text-yellow-600 space-y-1 list-disc list-inside">
                   <li>Deleting a user will permanently remove their account and all associated emails</li>
                   <li>The corresponding Cloudflare DNS record will also be deleted</li>
                   <li>Admin accounts cannot be deleted from this interface</li>
