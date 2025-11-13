@@ -2,7 +2,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import type { Metadata } from "next";
 
-const siteDomain = process.env.NEXT_PUBLIC_DOMAIN || "example.com";
+const siteDomain = process.env.NEXT_PUBLIC_APEX_DOMAIN || "example.com";
 const siteName =  "Mail Dashboard — " + siteDomain;
 const siteDescription = "A minimalistic, modern email dashboard for sending and receiving mail at your custom domain for free. Multi-user authentication with role-based access, powered by ForwardEmail, SMTP2GO, Supabase, and Cloudflare.";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mail.example.com";
