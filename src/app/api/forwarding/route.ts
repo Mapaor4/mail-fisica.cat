@@ -197,7 +197,7 @@ async function updateCloudflareDNS(
   // Build the new DNS content using the helper function from cloudflare.ts
   const newContent = buildForwardEmailDNS(alias, forwardTo || undefined);
 
-  console.log('🔄 Updating Cloudflare DNS record:', {
+  console.log('Updating Cloudflare DNS record:', {
     recordId: existingRecord.id,
     alias,
     forwardTo: forwardTo || 'none (webhook only)',
@@ -219,10 +219,10 @@ async function updateCloudflareDNS(
 
   if (!updateResponse.ok) {
     const errorData = await updateResponse.json();
-    console.error('❌ Cloudflare DNS update failed:', errorData);
+    console.error('Cloudflare DNS update failed:', errorData);
     throw new Error(`Failed to update DNS record: ${errorData.errors?.[0]?.message || 'Unknown error'}`);
   }
 
   const updateData = await updateResponse.json();
-  console.log('✅ DNS record updated successfully:', updateData.result.id);
+  console.log('DNS record updated successfully:', updateData.result.id);
 }
