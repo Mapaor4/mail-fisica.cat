@@ -48,15 +48,15 @@ export default function Sidebar() {
   const isAdmin = profile?.role === 'admin';
 
   const baseNavItems = [
-    { href: '/dashboard/inbox', icon: Inbox, label: 'Inbox', adminOnly: false },
-    { href: '/dashboard/sent', icon: Send, label: 'Sent', adminOnly: false },
-    { href: '/dashboard/compose', icon: Mail, label: 'Compose', adminOnly: false },
-    { href: '/dashboard/settings', icon: Settings, label: 'Settings', adminOnly: false },
+    { href: '/dashboard/inbox', icon: Inbox, label: "Safata d'entrada", adminOnly: false },
+    { href: '/dashboard/sent', icon: Send, label: "Correus enviats", adminOnly: false },
+    { href: '/dashboard/compose', icon: Mail, label: "Redactar un correu", adminOnly: false },
+    { href: '/dashboard/settings', icon: Settings, label: "Configuració", adminOnly: false },
   ];
 
   const adminNavItems = [
-    { href: '/dashboard/users', icon: Users, label: 'User Management', adminOnly: true },
-    { href: '/dashboard/monitor', icon: Activity, label: 'Webhook Monitor', adminOnly: true },
+    { href: '/dashboard/users', icon: Users, label: "Administració d'usuaris", adminOnly: true },
+    { href: '/dashboard/monitor', icon: Activity, label: "Monitor de webhooks", adminOnly: true },
   ];
 
   const navItems = isAdmin
@@ -67,7 +67,7 @@ export default function Sidebar() {
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{APEX_DOMAIN}</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Mail Dashboard</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Correu electrònic</p>
       </div>
 
       <nav className="flex-1 p-4 overflow-y-auto">
@@ -110,7 +110,7 @@ export default function Sidebar() {
             )}
           </div>
         ) : (
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Loading...</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Carregant...</p>
         )}
 
         <button
@@ -118,7 +118,7 @@ export default function Sidebar() {
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           <LogOut className="w-4 h-4" />
-          Sign Out
+          Tancar la sessió
         </button>
       </div>
     </aside>

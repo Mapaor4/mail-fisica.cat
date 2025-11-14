@@ -42,9 +42,9 @@ export default function SentPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <Header title="Sent" />
+        <Header title="Correus enviats" />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500 dark:text-gray-400">Loading emails...</div>
+          <div className="text-gray-500 dark:text-gray-400">Carregant correus electrònics...</div>
         </div>
       </div>
     );
@@ -53,7 +53,7 @@ export default function SentPage() {
   return (
     <div className="flex flex-col h-full">
       <Header 
-        title="Sent" 
+        title="Correus enviats" 
         onRefresh={() => fetchEmails(true)} 
         isRefreshing={isRefreshing}
       />
@@ -77,7 +77,7 @@ export default function SentPage() {
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              <p>Select an email to view</p>
+              <p>Selecciona un correu electrònic per visualitzar-lo</p>
             </div>
           )}
         </div>

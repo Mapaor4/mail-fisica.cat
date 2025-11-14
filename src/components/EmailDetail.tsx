@@ -37,10 +37,10 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{email.subject}</h3>
             <div className="space-y-1 text-sm">
               <p className="text-gray-700 dark:text-gray-300">
-                <span className="font-medium">From:</span> {email.from_email}
+                <span className="font-medium">De:</span> {email.from_email}
               </p>
               <p className="text-gray-700 dark:text-gray-300">
-                <span className="font-medium">To:</span> {email.to_email}
+                <span className="font-medium">Per a:</span> {email.to_email}
               </p>
               <p className="text-gray-500 dark:text-gray-400">
                 {format(new Date(dateStr), 'PPpp')}
@@ -70,7 +70,7 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <Paperclip className="w-4 h-4" />
-              <span className="font-medium">{email.attachments?.length} attachment(s)</span>
+              <span className="font-medium">{email.attachments?.length} fitxer(s) adjunt(s)</span>
             </div>
             <div className="mt-2 space-y-1">
               {email.attachments?.map((att, idx) => (

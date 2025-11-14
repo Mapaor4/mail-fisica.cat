@@ -15,7 +15,7 @@ export default function EmailList({ emails, onEmailClick, selectedEmailId }: Ema
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
         <Mail className="w-16 h-16 mb-4 opacity-50" />
-        <p className="text-lg">No emails yet</p>
+        <p className="text-lg">De moment no hi ha cap correu electrònic</p>
       </div>
     );
   }
@@ -48,7 +48,7 @@ export default function EmailList({ emails, onEmailClick, selectedEmailId }: Ema
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <p className={`text-sm truncate ${!email.is_read ? 'font-semibold' : 'font-medium'} text-gray-900 dark:text-white`}>
-                    {email.type === 'incoming' ? email.from_email : `To: ${email.to_email}`}
+                    {email.type === 'incoming' ? email.from_email : `Per a: ${email.to_email}`}
                   </p>
                   <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {formatDistanceToNow(new Date(dateStr), { addSuffix: true })}
