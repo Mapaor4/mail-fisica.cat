@@ -149,25 +149,25 @@ export default function SignUpForm() {
 
     // Validation
     if (alias.length < 2) {
-      setError('Alias must be at least 2 characters');
+      setError("L'Alias ha de tenir mínim 2 caràcters");
       setLoading(false);
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError("La contrasenya ha de tenir mínim 8 caràcters");
       setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Les contrasenyes no coincideixen');
       setLoading(false);
       return;
     }
 
     if (aliasAvailable === false) {
-      setError('This alias is already taken');
+      setError("Ja existeix un usuari amb aquest alias");
       setLoading(false);
       return;
     }
@@ -210,14 +210,14 @@ export default function SignUpForm() {
           const dnsError = await dnsResponse.json();
           console.error('DNS creation failed:', dnsError);
           setDnsWarning(
-            'Account created successfully, but DNS setup failed. Please contact the administrator to complete email setup.'
+            'Compte creat amb èxit, però la configuració de DNS ha fallat. Si us plau, contacta amb admin@fisica.cat.'
           );
           // Don't block sign-up, continue to dashboard
         }
       } catch (dnsError) {
         console.error('DNS request failed:', dnsError);
         setDnsWarning(
-          'Account created successfully, but DNS setup failed. Please contact the administrator to complete email setup.'
+          'Compte creat amb èxit, però la configuració de DNS ha fallat. Si us plau, contacta amb admin@fisica.cat.'
         );
         // Don't block sign-up, continue to dashboard
       }
@@ -227,19 +227,19 @@ export default function SignUpForm() {
       router.refresh();
     } catch (err) {
       console.error('Unexpected error during sign-up:', err);
-      setError('An unexpected error occurred');
+      setError('Hi ha hagut un error inesperat');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-      <form onSubmit={handleSignUp} className="space-y-5 sm:space-y-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+      <form onSubmit={handleSignUp} className="space-y-6">
         {/* Alias Field */}
         <div>
           <label htmlFor="alias" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Choose your alias *
+            Tria el teu alias *
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -266,17 +266,17 @@ export default function SignUpForm() {
             )}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Your email will be: <strong>{alias || 'alias'}@{APEX_DOMAIN}</strong>
+            El teu correu electrònic serà: <strong>{alias || 'alias'}@{APEX_DOMAIN}</strong>
           </p>
           {aliasAvailable === false && (
-            <p className="text-sm text-red-600 dark:text-red-400 mt-1">This alias is already taken</p>
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">Ja hi ha un usuari amb aquest alias</p>
           )}
         </div>
 
         {/* Password Field */}
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Password *
+            Contrasenya *
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -291,13 +291,13 @@ export default function SignUpForm() {
               disabled={loading}
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 8 characters</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Mínim 8 caràcters</p>
         </div>
 
         {/* Confirm Password Field */}
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Confirm Password *
+            Confirma la contrasenya *
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -317,7 +317,7 @@ export default function SignUpForm() {
         {/* Forward To Field (Optional) */}
         <div>
           <label htmlFor="forwardTo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Forward to (optional)
+            Redirigir a (opcional)
           </label>
           <div className="relative">
             <Forward className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -326,20 +326,20 @@ export default function SignUpForm() {
               type="email"
               value={forwardTo}
               onChange={(e) => setForwardTo(e.target.value)}
-              placeholder="your.email@gmail.com"
+              placeholder="mailpersonal@gmail.com"
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               disabled={loading}
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Automatically forward incoming emails to another address
+            Els correus electrònics que rebis s&apos;enviaran també automàticament a aquesta adreça de correu electrònic.
           </p>
         </div>
 
         {/* Organization Passphrase Field */}
         <div>
           <label htmlFor="orgPassphrase" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Organization Passphrase *
+            Clau de pas *
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -348,14 +348,14 @@ export default function SignUpForm() {
               type="password"
               value={orgPassphrase}
               onChange={(e) => setOrgPassphrase(e.target.value)}
-              placeholder="Enter organization passphrase"
+              placeholder="Introdueix la clau de pas"
               required
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               disabled={loading}
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Hint: {PASSPHRASE_HINT}
+            Per evitar que gent random cal una clau de pas que si ets alumne hauries de saber. <br></br><br></br>Pista: {PASSPHRASE_HINT}
           </p>
         </div>
 
@@ -381,16 +381,16 @@ export default function SignUpForm() {
           disabled={loading || aliasAvailable === false}
           className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? 'Creating account...' : 'Sign Up'}
+          {loading ? 'Creant compte...' : "Registra't"}
         </button>
       </form>
 
       {/* Sign In Link */}
       <div className="mt-6 text-center">
         <p className="text-gray-600 dark:text-gray-400">
-          Already have an account?{' '}
+          Ja tens un compte?{' '}
           <Link href="/sign-in" className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300">
-            Sign in
+            Inicia la sessió
           </Link>
         </p>
       </div>

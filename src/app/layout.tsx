@@ -3,8 +3,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import type { Metadata } from "next";
 
 const siteDomain = process.env.NEXT_PUBLIC_APEX_DOMAIN || "example.com";
-const siteName =  "Mail Dashboard — " + siteDomain;
-const siteDescription = "A minimalistic, modern email dashboard for sending and receiving mail at your custom domain for free. Multi-user authentication with role-based access, powered by ForwardEmail, SMTP2GO, Supabase, and Cloudflare.";
+const siteName =  "Correu electrònic — " + siteDomain;
+const siteDescription = "Aquesta pàgina web és la plataforma de correu electrònic pel domini fisica.cat. Permet enviar i rebre correus, amb il·limitats nombres d'usuaris, rols d'administrador i molt més. Fet possible gràcia a ForwardEmail, SMTP2GO, Supabase, Vercel i Cloudflare.";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mail.example.com";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "es_CA",
     url: siteUrl,
     siteName: siteName,
     title: siteName,
@@ -56,7 +56,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ca" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />

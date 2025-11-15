@@ -11,7 +11,6 @@ export default function InboxPage() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showEmailList, setShowEmailList] = useState(true);
 
   const fetchEmails = async (showRefreshing = false) => {
     if (showRefreshing) setIsRefreshing(true);
@@ -38,7 +37,6 @@ export default function InboxPage() {
 
   const handleEmailClick = async (email: Email) => {
     setSelectedEmail(email);
-    setShowEmailList(false); // Hide list on mobile when email is selected
 
     // Mark as read if it's unread
     if (!email.is_read) {
@@ -59,17 +57,12 @@ export default function InboxPage() {
     }
   };
 
-  const handleCloseEmail = () => {
-    setSelectedEmail(null);
-    setShowEmailList(true); // Show list when closing email on mobile
-  };
-
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <Header title="Inbox" />
+        <Header title="Safata d'entrada" />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500 dark:text-gray-400">Loading emails...</div>
+          <div className="text-gray-500 dark:text-gray-400">Carregant correus electrònics...</div>
         </div>
       </div>
     );
@@ -78,16 +71,14 @@ export default function InboxPage() {
   return (
     <div className="flex flex-col h-full">
       <Header 
-        title="Inbox" 
+        title="Safata d'entrada" 
         onRefresh={() => fetchEmails(true)} 
         isRefreshing={isRefreshing}
       />
       
       <div className="flex-1 overflow-hidden flex">
         {/* Email List */}
-        <div className={`w-full lg:w-96 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto ${
-          showEmailList ? 'block' : 'hidden lg:block'
-        }`}>
+        <div className="w-96 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
           <EmailList 
             emails={emails}
             onEmailClick={handleEmailClick}
@@ -95,17 +86,15 @@ export default function InboxPage() {
           />
         </div>
         {/* Email Detail */}
-        <div className={`flex-1 overflow-hidden ${
-          showEmailList ? 'hidden lg:block' : 'block'
-        }`}>
+        <div className="flex-1 overflow-hidden">
           {selectedEmail ? (
             <EmailDetail 
               email={selectedEmail}
-              onClose={handleCloseEmail}
+              onClose={() => setSelectedEmail(null)}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              <p>Select an email to view</p>
+              <p>Selecciona un correu electrònic per visualitzar-lo</p>
             </div>
           )}
         </div>

@@ -46,16 +46,16 @@ export default function SignInPage() {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{APEX_DOMAIN}</h1>
-          <p className="text-gray-600 dark:text-gray-400">Sign in to your email account</p>
+          <p className="text-gray-600 dark:text-gray-400">Inicia la sessió amb el teu compte</p>
         </div>
 
         {/* Sign In Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-          <form onSubmit={handleSignIn} className="space-y-5 sm:space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+          <form onSubmit={handleSignIn} className="space-y-6">
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
+                Correu electrònic
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -75,7 +75,7 @@ export default function SignInPage() {
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
+                Contrasenya
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -106,16 +106,16 @@ export default function SignInPage() {
               disabled={loading}
               className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Iniciant la sessió...' : 'Inicia la sessió'}
             </button>
           </form>
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-gray-600 dark:text-gray-400">
-              Don&apos;t have an account?{' '}
+              Encara no tens un compte?{' '}
               <Link href="/sign-up" className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300">
-                Sign up
+                Registra&apos;t
               </Link>
             </p>
           </div>

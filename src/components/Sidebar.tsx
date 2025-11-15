@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Inbox, Send, Mail, Activity, Beaker, LogOut, Settings, Users, Menu, X } from 'lucide-react';
+import { Inbox, Send, Mail, Activity, Beaker, LogOut, Settings, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types/auth';
@@ -15,7 +15,6 @@ export default function Sidebar() {
   const supabase = createClient();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -46,22 +45,18 @@ export default function Sidebar() {
     router.refresh();
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
   const isAdmin = profile?.role === 'admin';
 
   const baseNavItems = [
-    { href: '/dashboard/inbox', icon: Inbox, label: 'Inbox', adminOnly: false },
-    { href: '/dashboard/sent', icon: Send, label: 'Sent', adminOnly: false },
-    { href: '/dashboard/compose', icon: Mail, label: 'Compose', adminOnly: false },
-    { href: '/dashboard/settings', icon: Settings, label: 'Settings', adminOnly: false },
+    { href: '/dashboard/inbox', icon: Inbox, label: "Safata d'entrada", adminOnly: false },
+    { href: '/dashboard/sent', icon: Send, label: "Correus enviats", adminOnly: false },
+    { href: '/dashboard/compose', icon: Mail, label: "Redactar un correu", adminOnly: false },
+    { href: '/dashboard/settings', icon: Settings, label: "Configuració", adminOnly: false },
   ];
 
   const adminNavItems = [
-    { href: '/dashboard/users', icon: Users, label: 'User Management', adminOnly: true },
-    { href: '/dashboard/monitor', icon: Activity, label: 'Webhook Monitor', adminOnly: true },
+    { href: '/dashboard/users', icon: Users, label: "Administració d'usuaris", adminOnly: true },
+    { href: '/dashboard/monitor', icon: Activity, label: "Monitor de webhooks", adminOnly: true },
   ];
 
   const navItems = isAdmin
@@ -69,41 +64,10 @@ export default function Sidebar() {
     : baseNavItems;
 
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMobileMenuOpen(true)}
-        className="lg:hidden fixed top-3 left-3 mt-auto mb-auto  z-40 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
-        aria-label="Open menu"
-      >
-        <Menu className="w-6 h-6 mr-auto ml-auto text-gray-700 dark:text-gray-300" />
-      </button>
-
-      {/* Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={closeMobileMenu}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col fixed lg:static inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}>
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{APEX_DOMAIN}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Mail Dashboard</p>
-        </div>
-        {/* Close button for mobile */}
-        <button
-          onClick={closeMobileMenu}
-          className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-          aria-label="Close menu"
-        >
-          <X className="w-5 h-5 mr-auto ml-auto text-gray-700 dark:text-gray-300" />
-        </button>
+    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{APEX_DOMAIN}</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Correu electrònic</p>
       </div>
 
       <nav className="flex-1 p-4 overflow-y-auto">
@@ -116,7 +80,6 @@ export default function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  onClick={closeMobileMenu}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
@@ -147,7 +110,7 @@ export default function Sidebar() {
             )}
           </div>
         ) : (
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Loading...</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Carregant...</p>
         )}
 
         <button
@@ -155,10 +118,9 @@ export default function Sidebar() {
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           <LogOut className="w-4 h-4" />
-          Sign Out
+          Tancar la sessió
         </button>
       </div>
     </aside>
-    </>
   );
 }

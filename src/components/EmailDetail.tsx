@@ -31,16 +31,16 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-800">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4">
+      <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 break-words">{email.subject}</h3>
-            <div className="space-y-1 text-xs sm:text-sm">
-              <p className="text-gray-700 dark:text-gray-300 truncate">
-                <span className="font-medium">From:</span> {email.from_email}
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{email.subject}</h3>
+            <div className="space-y-1 text-sm">
+              <p className="text-gray-700 dark:text-gray-300">
+                <span className="font-medium">De:</span> {email.from_email}
               </p>
-              <p className="text-gray-700 dark:text-gray-300 truncate">
-                <span className="font-medium">To:</span> {email.to_email}
+              <p className="text-gray-700 dark:text-gray-300">
+                <span className="font-medium">Per a:</span> {email.to_email}
               </p>
               <p className="text-gray-500 dark:text-gray-400">
                 {format(new Date(dateStr), 'PPpp')}
@@ -54,14 +54,14 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
                 className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                 title="Reply"
               >
-                <Reply className=" ml-auto mr-auto w-5 h-5" />
+                <Reply className="w-5 h-5" />
               </button>
             )}
             <button
               onClick={onClose}
               className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <X className="ml-auto mr-auto w-5 h-5" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <Paperclip className="w-4 h-4" />
-              <span className="font-medium">{email.attachments?.length} attachment(s)</span>
+              <span className="font-medium">{email.attachments?.length} fitxer(s) adjunt(s)</span>
             </div>
             <div className="mt-2 space-y-1">
               {email.attachments?.map((att, idx) => (
@@ -85,7 +85,7 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-auto px-4 sm:px-6 py-3 sm:py-4">
+      <div className="flex-1 overflow-auto px-6 py-4">
         {email.html_body ? (
           <div
             className="prose prose-sm max-w-none dark:prose-invert dark:text-gray-300!"
