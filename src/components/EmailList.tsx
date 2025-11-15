@@ -13,15 +13,9 @@ interface EmailListProps {
 export default function EmailList({ emails, onEmailClick, selectedEmailId }: EmailListProps) {
   if (emails.length === 0) {
     return (
-<<<<<<< HEAD
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-        <Mail className="w-16 h-16 mb-4 opacity-50" />
-        <p className="text-lg">De moment no hi ha cap correu electrònic</p>
-=======
       <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400 p-4">
         <Mail className="w-12 sm:w-16 h-12 sm:h-16 mb-4 opacity-50" />
-        <p className="text-base sm:text-lg">No emails yet</p>
->>>>>>> 18ae95f (mobile friendly)
+        <p className="text-base sm:text-lg">De moment no hi ha cap correu electrònic</p>
       </div>
     );
   }
