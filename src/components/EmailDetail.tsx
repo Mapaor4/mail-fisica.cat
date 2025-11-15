@@ -31,8 +31,9 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-800">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-start justify-between">
+<<<<<<< HEAD
           <div className="flex-1">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{email.subject}</h3>
             <div className="space-y-1 text-sm">
@@ -41,6 +42,16 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
               </p>
               <p className="text-gray-700 dark:text-gray-300">
                 <span className="font-medium">Per a:</span> {email.to_email}
+=======
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 break-words">{email.subject}</h3>
+            <div className="space-y-1 text-xs sm:text-sm">
+              <p className="text-gray-700 dark:text-gray-300 truncate">
+                <span className="font-medium">From:</span> {email.from_email}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300 truncate">
+                <span className="font-medium">To:</span> {email.to_email}
+>>>>>>> 18ae95f (mobile friendly)
               </p>
               <p className="text-gray-500 dark:text-gray-400">
                 {format(new Date(dateStr), 'PPpp')}
@@ -85,7 +96,7 @@ export default function EmailDetail({ email, onClose }: EmailDetailProps) {
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-auto px-6 py-4">
+      <div className="flex-1 overflow-auto px-4 sm:px-6 py-3 sm:py-4">
         {email.html_body ? (
           <div
             className="prose prose-sm max-w-none dark:prose-invert dark:text-gray-300!"
