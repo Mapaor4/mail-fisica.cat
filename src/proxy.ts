@@ -48,7 +48,8 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith('/sign-in') &&
     !pathname.startsWith('/sign-up') &&
     !pathname.startsWith('/api/webhooks') && // Allow webhooks without auth
-    !pathname.startsWith('/api/verify-passphrase') // Allow passphrase verification during sign-up
+    !pathname.startsWith('/api/verify-passphrase') && // Allow passphrase verification during sign-up
+    !pathname.startsWith('/api/supabase-keep-alive') // Allow keep-alive endpoint for cron jobs
   ) {
     const url = request.nextUrl.clone();
     url.pathname = '/sign-in';
