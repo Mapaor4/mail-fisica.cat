@@ -30,10 +30,48 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { alias, forwardTo } = body;
 
+    if (!forwardTo || typeof forwardTo !== 'string') {
+      return NextResponse.json(
+        { error: 'Forward to email is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidEmail(forwardTo)) {
+      return NextResponse.json(
+        { error: 'Invalid forward to email address' },
+        { status: 400 }
+      );
+    }
+
+    if (!session.user.email) {
+      return NextResponse.json(
+        { error: 'Authenticated user email is missing' },
+        { status: 500 }
+      );
+    }
+
     if (!alias || typeof alias !== 'string') {
       return NextResponse.json(
         { error: 'Invalid alias provided' },
         { status: 400 }
+      );
+    }
+
+    // Keep the profile email in sync with the auth identity before provisioning DNS.
+    const { error: profileUpdateError } = await dbClient
+      .from('profiles')
+      .update({
+        email: session.user.email,
+        forward_to: forwardTo,
+      })
+      .eq('id', session.user.id);
+
+    if (profileUpdateError) {
+      console.error('Failed to sync profile before DNS creation:', profileUpdateError);
+      return NextResponse.json(
+        { error: 'Failed to update profile', details: profileUpdateError.message },
+        { status: 500 }
       );
     }
 
@@ -57,7 +95,11 @@ export async function POST(request: NextRequest) {
     if (result.record?.id) {
       const { error: updateError } = await dbClient
         .from('profiles')
-        .update({ dns_record_id: result.record.id, forward_to: forwardTo || null })
+        .update({
+          dns_record_id: result.record.id,
+          forward_to: forwardTo,
+          email: session.user.email,
+        })
         .eq('id', session.user.id);
 
       if (updateError) {
@@ -78,6 +120,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 // PATCH - Update existing DNS record

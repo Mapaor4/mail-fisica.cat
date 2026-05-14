@@ -9,6 +9,10 @@ import { Lock, User, AlertCircle, Forward } from 'lucide-react';
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 const PASSPHRASE_HINT = process.env.NEXT_PUBLIC_PASSPHRASE_HINT || 'No hint provided. You need to know the passphrase.';
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 /**
  * Sign Up Form Component - Client Component
  * Handles all interactive form logic including alias checking and user creation
@@ -99,6 +103,20 @@ export default function SignUpForm() {
       return;
     }
 
+    const trimmedForwardTo = forwardTo.trim();
+
+    if (!trimmedForwardTo) {
+      setError('Forward to email is required');
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidEmail(trimmedForwardTo)) {
+      setError('Enter a valid forward to email address');
+      setLoading(false);
+      return;
+    }
+
     const email = `${alias}@${APEX_DOMAIN}`;
 
     try {
@@ -124,7 +142,7 @@ export default function SignUpForm() {
           },
           body: JSON.stringify({
             alias,
-            forwardTo: forwardTo || undefined,
+            forwardTo: trimmedForwardTo,
           }),
         });
 
@@ -225,7 +243,7 @@ export default function SignUpForm() {
         {/* Forward To Field (Optional) */}
         <div>
           <label htmlFor="forwardTo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Forward to (optional)
+            Forward to *
           </label>
           <div className="relative">
             <Forward className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -235,12 +253,13 @@ export default function SignUpForm() {
               value={forwardTo}
               onChange={(e) => setForwardTo(e.target.value)}
               placeholder="your.email@gmail.com"
+              required
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               disabled={loading}
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Automatically forward incoming emails to another address
+            Incoming emails will be forwarded to this address.
           </p>
         </div>
 
