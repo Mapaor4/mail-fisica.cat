@@ -18,7 +18,7 @@ export default function SignUpPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{APEX_DOMAIN}</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {registrationEnabled ? 'Create your email account' : 'Registration Status'}
+            {registrationEnabled ? 'Crea el teu compte de correu electrònic' : 'Ens sap greu anunciar que...'}
           </p>
         </div>
 

@@ -67,13 +67,13 @@ export default function UserManagementPage() {
         
         // Show warning if DNS deletion failed
         if (!data.dnsDeleted && data.dnsError) {
-          setError(`User deleted, but DNS cleanup failed: ${data.dnsError}. You may need to manually remove the DNS record.`);
+          setError(`Usuari eliminat, però hi ha hagut un error eliminant els DNS: ${data.dnsError}. Hauràs d'eliminar manualment el registre DNS.`);
         }
       } else {
-        setError(data.error || 'Failed to delete user');
+        setError(data.error || "Hi ha hagut un error eliminant l'usuari");
       }
     } catch (err) {
-      setError('Error deleting user');
+      setError("Hi ha hagut un error eliminant l'usuari");
       console.error('Error deleting user:', err);
     } finally {
       setDeletingUserId(null);
@@ -87,9 +87,9 @@ export default function UserManagementPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <Header title="User Management" />
+        <Header title="Administració d'usuaris" />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500">Loading users...</div>
+          <div className="text-gray-500">Carregant usuaris...</div>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export default function UserManagementPage() {
   return (
     <div className="flex flex-col h-full">
       <Header 
-        title="User Management" 
+        title="Administració d'usuaris" 
         onRefresh={() => fetchUsers(true)} 
         isRefreshing={isRefreshing}
       />
@@ -115,7 +115,7 @@ export default function UserManagementPage() {
               <div>
                 {/* <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">User Management</h3> */}
                 <p className="text-sm text-blue-800 dark:text-blue-400">
-                  Manage users in your system. Deleting a user will remove their account, emails, and Cloudflare DNS records.
+                  Administra usuaris de la teva organització. Eliminar un usuari suprimirà permanentment el seu compte i tots els seus correus electrònics.
                 </p>
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function UserManagementPage() {
                   <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Usuaris totals</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{users.length}</p>
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function UserManagementPage() {
                   <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Admins</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Administradors</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{adminUsers.length}</p>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export default function UserManagementPage() {
                   <UserIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Regular Users</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Usuaris normals</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{regularUsers.length}</p>
                 </div>
               </div>
@@ -177,22 +177,22 @@ export default function UserManagementPage() {
                 <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      User
+                      Usuari
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Email
+                      Correu electrònic
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Forward To
+                      Adreça de redirecció
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Role
+                      Rol
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Created
+                      Data de creació
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
+                      Accions
                     </th>
                   </tr>
                 </thead>
@@ -200,7 +200,7 @@ export default function UserManagementPage() {
                   {users.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                        No users found
+                        No s&apos;han trobat usuaris
                       </td>
                     </tr>
                   ) : (
@@ -226,7 +226,7 @@ export default function UserManagementPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                           {user.forward_to || (
-                            <span className="text-gray-400 dark:text-gray-500 italic">None</span>
+                            <span className="text-gray-400 dark:text-gray-500 italic">Cap</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -236,7 +236,7 @@ export default function UserManagementPage() {
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
-                              User
+                              Usuari
                             </span>
                           )}
                         </td>
@@ -251,20 +251,20 @@ export default function UserManagementPage() {
                             <>
                               {showDeleteConfirm === user.id ? (
                                 <div className="flex items-center justify-end gap-2">
-                                  <span className="text-xs text-gray-600 mr-2">Delete {user.alias}?</span>
+                                  <span className="text-xs text-gray-600 mr-2">Eliminar {user.alias}?</span>
                                   <button
                                     onClick={() => handleDeleteUser(user.id)}
                                     disabled={deletingUserId === user.id}
                                     className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
-                                    {deletingUserId === user.id ? 'Deleting...' : 'Confirm'}
+                                    {deletingUserId === user.id ? 'Eliminant...' : 'Confirmar'}
                                   </button>
                                   <button
                                     onClick={() => setShowDeleteConfirm(null)}
                                     disabled={deletingUserId === user.id}
                                     className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
                                   >
-                                    Cancel
+                                    Cancel·lar
                                   </button>
                                 </div>
                               ) : (
@@ -274,13 +274,13 @@ export default function UserManagementPage() {
                                   className="inline-flex items-center gap-1 px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  Delete
+                                  Eliminar
                                 </button>
                               )}
                             </>
                           )}
                           {user.role === 'admin' && (
-                            <span className="text-xs text-gray-400 dark:text-gray-500 italic">Protected</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 italic">Protegit</span>
                           )}
                         </td>
                       </tr>
@@ -296,12 +296,12 @@ export default function UserManagementPage() {
             <div className="flex items-start gap-3">
               {/* <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5 shrink-0" /> */}
               <div>
-                <h4 className="font-semibold text-yellow-900 dark:text-yellow-500 mb-1">Warning note</h4>
+                <h4 className="font-semibold text-yellow-900 dark:text-yellow-500 mb-1">Nota important</h4>
                 <ul className="text-sm text-yellow-800 dark:text-yellow-600 space-y-1 list-disc list-inside">
-                  <li>Deleting a user will permanently remove their account and all associated emails</li>
-                  <li>The corresponding Cloudflare DNS record will also be deleted</li>
-                  <li>Admin accounts cannot be deleted from this interface</li>
-                  <li>This action cannot be undone</li>
+                    <li>Eliminar un usuari eliminarà de manera permanent el seu compte i tots els correus electrònics associats a aquest</li>
+                    <li>També s&apos;eliminarà el registre DNS corresponent de Cloudflare</li>
+                    <li>Els comptes d&apos;administrador no es poden eliminar mitjançant aquesta interfície (s&apos;ha de fer des de Supabase per seguretat)</li>
+                    <li>L&apos;acció d&apos;eliminar un compte és irreversible. Ni tan sols l&apos;admin propietari la pot desfer (s&apos;elimina completament l&apos;usuari de Supabase i totes les dades associades).</li>
                 </ul>
               </div>
             </div>
