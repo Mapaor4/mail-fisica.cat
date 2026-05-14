@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, User, AlertCircle, CheckCircle, Forward } from 'lucide-react';
+import { Lock, User, AlertCircle, Forward } from 'lucide-react';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 const PASSPHRASE_HINT = process.env.NEXT_PUBLIC_PASSPHRASE_HINT || 'No hint provided. You need to know the passphrase.';
@@ -21,66 +21,8 @@ export default function SignUpForm() {
   const [orgPassphrase, setOrgPassphrase] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [checkingAlias, setCheckingAlias] = useState(false);
-  const [aliasAvailable, setAliasAvailable] = useState<boolean | null>(null);
   const [dnsWarning, setDnsWarning] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createClient();
-
-  /**
-   * Check if alias is available in the database
-   */
-  const checkAliasAvailability = async (aliasValue: string) => {
-    if (!aliasValue || aliasValue.length < 2) {
-      setAliasAvailable(null);
-      return;
-    }
-
-    setCheckingAlias(true);
-    try {
-      const { data, error } = await supabase.rpc('alias_exists', {
-        alias_param: aliasValue,
-      });
-
-      if (error) {
-        console.error('Error checking alias:', error);
-        // RPC reported an error (function missing or SQL error) — treat as unknown
-        setAliasAvailable(null);
-      } else {
-        // Handle errors vs. empty database (first user signing up)
-        let exists = false;
-
-        if (data === null || data === undefined) {
-          // No result -> alias does not exist
-          exists = false;
-        } else if (typeof data === 'boolean') {
-          exists = data;
-        } else if (Array.isArray(data) && data.length > 0) {
-          // Supabase sometimes wraps scalar returns in an array/object
-          const first = data[0];
-          if (typeof first === 'object' && first !== null) {
-            const v = Object.values(first)[0];
-            exists = Boolean(v);
-          } else {
-            exists = Boolean(first);
-          }
-        } else if (typeof data === 'object') {
-          const v = Object.values(data)[0];
-          exists = Boolean(v);
-        } else {
-          exists = Boolean(data);
-        }
-
-        setAliasAvailable(!exists);
-      }
-    } catch (err) {
-      // Network/other runtime error
-      console.error('Error checking alias:', err);
-      setAliasAvailable(null);
-    } finally {
-      setCheckingAlias(false);
-    }
-  };
 
   /**
    * Handle alias input change with sanitization and debounced availability check
@@ -90,15 +32,6 @@ export default function SignUpForm() {
     const sanitized = value.toLowerCase().replace(/[^a-z0-9.-]/g, '');
     setAlias(sanitized);
 
-    // Check availability with debounce
-    if (sanitized.length >= 2) {
-      const timeoutId = setTimeout(() => {
-        checkAliasAvailability(sanitized);
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    } else {
-      setAliasAvailable(null);
-    }
   };
 
   /**
@@ -166,29 +99,18 @@ export default function SignUpForm() {
       return;
     }
 
-    if (aliasAvailable === false) {
-      setError('This alias is already taken');
-      setLoading(false);
-      return;
-    }
-
     const email = `${alias}@${APEX_DOMAIN}`;
 
     try {
-      // Step 1: Create Supabase auth user
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Step 1: Create Neon Auth user
+      const { error: signUpError } = await authClient.signUp.email({
         email,
         password,
-        options: {
-          data: {
-            alias,
-            forward_to: forwardTo || null,
-          },
-        },
+        name: alias,
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(signUpError.message || 'Sign up failed');
         setLoading(false);
         return;
       }
@@ -253,24 +175,10 @@ export default function SignUpForm() {
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               disabled={loading}
             />
-            {checkingAlias && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full" />
-              </div>
-            )}
-            {!checkingAlias && aliasAvailable === true && (
-              <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-600 dark:text-green-500" />
-            )}
-            {!checkingAlias && aliasAvailable === false && (
-              <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-600 dark:text-red-500" />
-            )}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Your email will be: <strong>{alias || 'alias'}@{APEX_DOMAIN}</strong>
           </p>
-          {aliasAvailable === false && (
-            <p className="text-sm text-red-600 dark:text-red-400 mt-1">This alias is already taken</p>
-          )}
         </div>
 
         {/* Password Field */}
@@ -378,7 +286,7 @@ export default function SignUpForm() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || aliasAvailable === false}
+          disabled={loading}
           className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Creating account...' : 'Sign Up'}

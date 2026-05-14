@@ -1,6 +1,17 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { auth } from '@/lib/auth/server';
 
+export default auth.middleware({
+  loginUrl: '/sign-in',
+});
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|sign-in|sign-up|api/auth|api/webhooks|api/verify-passphrase|api/send|api/dns|api/forwarding|api/users).*)',
+  ],
+};
+
+/* ------ OLD VERSION ------- */
+/*
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
@@ -69,16 +80,35 @@ export async function proxy(request: NextRequest) {
 
   return supabaseResponse;
 }
+*/
 
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-};
+
+// --- OLD VERSION ---
+// export const config = {
+//   matcher: [
+//     /*
+//      * Match all request paths except:
+//      * - _next/static (static files)
+//      * - _next/image (image optimization files)
+//      * - favicon.ico (favicon file)
+//      * - public files (public folder)
+//      */
+//     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+//   ],
+// };
+
+
+// TODO: Implement proxy for Neon Database:
+// import { auth } from '@/lib/auth/server';
+
+// export default auth.middleware({
+//   // Redirects unauthenticated users to sign-in page
+//   loginUrl: '/auth/sign-in',
+// });
+
+// export const config = {
+//   matcher: [
+//     // Protected routes requiring authentication
+//     '/account/:path*',
+//   ],
+// };

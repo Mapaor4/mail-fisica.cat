@@ -95,9 +95,16 @@ function ComposeForm() {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: { success?: boolean; error?: string; warning?: string } | null = null;
 
-      if (data.success) {
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        data = null;
+      }
+
+      if (response.ok && data?.success) {
         setSuccess(true);
         // Reset form
         setTo('');
@@ -113,7 +120,7 @@ function ComposeForm() {
           router.push('/dashboard/sent');
         }, 1500);
       } else {
-        setError(data.error || 'Failed to send email');
+        setError(data?.error || responseText || 'Failed to send email');
       }
     } catch (err) {
       setError('An error occurred while sending the email');

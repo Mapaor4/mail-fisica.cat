@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { auth } from '@/lib/auth/server';
+import { dbClient } from '@/lib/neon/client';
+import { sql } from '@/lib/neon/server';
 import { deleteForwardEmailDNS, listForwardEmailDNS } from '@/lib/cloudflare';
 
 // GET - List all users (admin only)
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
     // Get authenticated user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: session } = await auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await dbClient
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('id', session.user.id)
       .single();
 
     if (profileError || !profile || profile.role !== 'admin') {
@@ -31,20 +28,11 @@ export async function GET() {
       );
     }
 
-    // Get all users with their profiles using admin client to bypass RLS
-    const supabaseAdmin = createAdminClient();
-    const { data: profiles, error: usersError } = await supabaseAdmin
-      .from('profiles')
-      .select('id, alias, email, forward_to, role, created_at, updated_at')
-      .order('created_at', { ascending: false });
-
-    if (usersError) {
-      console.error('Failed to fetch users:', usersError);
-      return NextResponse.json(
-        { error: 'Failed to fetch users' },
-        { status: 500 }
-      );
-    }
+    const profiles = await sql`
+      SELECT id, alias, email, forward_to, role, created_at, updated_at
+      FROM public.profiles
+      ORDER BY created_at DESC
+    `;
 
     return NextResponse.json({
       success: true,
@@ -62,14 +50,10 @@ export async function GET() {
 // DELETE - Delete a user (admin only, or self-deletion)
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
     // Get authenticated user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: session } = await auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -83,14 +67,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Use admin client to bypass RLS
-    const supabaseAdmin = createAdminClient();
-    
     // Get current user's profile
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await dbClient
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('id', session.user.id)
       .single();
 
     if (profileError || !profile) {
@@ -101,7 +82,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check permissions: users can only delete themselves, admins can delete anyone except other admins
-    const isSelfDeletion = userId === user.id;
+    const isSelfDeletion = userId === session.user.id;
     const isAdmin = profile.role === 'admin';
 
     if (!isSelfDeletion && !isAdmin) {
@@ -112,13 +93,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get the target user's profile
-    const { data: targetProfile, error: targetProfileError } = await supabaseAdmin
-      .from('profiles')
-      .select('alias, role')
-      .eq('id', userId)
-      .single();
+    const targetProfiles = await sql`
+      SELECT alias, role
+      FROM public.profiles
+      WHERE id = ${userId}
+      LIMIT 1
+    `;
+    const targetProfile = targetProfiles[0] as { alias: string; role: string } | undefined;
 
-    if (targetProfileError || !targetProfile) {
+    if (!targetProfile) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -170,17 +153,17 @@ export async function DELETE(request: NextRequest) {
       console.error('Error deleting DNS record:', error);
     }
 
-    // Delete user from Supabase Auth using admin API
-    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-
-    if (deleteAuthError) {
-      console.error('Failed to delete user from auth:', deleteAuthError);
+    try {
+      await sql`DELETE FROM public.profiles WHERE id = ${userId}`;
+      await sql`DELETE FROM neon_auth."user" WHERE id = ${userId}`;
+    } catch (deleteError) {
+      console.error('Failed to delete user from auth:', deleteError);
       return NextResponse.json(
-        { 
-          error: 'Failed to delete user', 
-          details: deleteAuthError.message,
+        {
+          error: 'Failed to delete user',
+          details: deleteError instanceof Error ? deleteError.message : String(deleteError),
           dnsDeleted,
-          dnsError 
+          dnsError,
         },
         { status: 500 }
       );

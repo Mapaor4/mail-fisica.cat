@@ -35,12 +35,12 @@ CREATE INDEX IF NOT EXISTS idx_emails_to ON emails(to_email);
 -- Profiles table
 -- ===================
 
--- Create profiles table (linked to Supabase auth.users)
+-- Create profiles table (linked to Neon Auth users)
 -- IMPORTANT NOTE: The email field needs to be edited with your actual domain
 CREATE TABLE IF NOT EXISTS profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY REFERENCES neon_auth."user"(id) ON DELETE CASCADE,
   alias TEXT UNIQUE NOT NULL,
-  email TEXT GENERATED ALWAYS AS (alias || '@example.com') STORED,
+  email TEXT NOT NULL,
   forward_to TEXT,
   dns_record_id TEXT,
   role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
@@ -81,21 +81,30 @@ CREATE TRIGGER update_profiles_updated_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, alias, forward_to, role)
+  INSERT INTO public.profiles (id, alias, email, forward_to, role)
   VALUES (
     NEW.id,
-    NEW.raw_user_meta_data->>'alias',
-    NEW.raw_user_meta_data->>'forward_to',
-    COALESCE(NEW.raw_user_meta_data->>'role', 'user')
+    split_part(NEW.email, '@', 1),
+    NEW.email,
+    NULL,
+    'user'
   );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_created ON neon_auth."user";
 CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
+  AFTER INSERT ON neon_auth."user"
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Check if an alias already exists
+CREATE OR REPLACE FUNCTION public.alias_exists(alias_param TEXT)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM public.profiles WHERE alias = alias_param
+  );
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
 
 -- ==========================
 -- Row Level Security (RLS)
@@ -132,9 +141,23 @@ CREATE POLICY "Users can update own emails"
   ON emails FOR UPDATE
   USING (user_id = auth.uid());
 
--- ==============
--- Final Check
--- ==============
+-- =======================
+-- Check everything is ok
+-- =======================
 SELECT 'Setup complete! Run:' AS message;
 SELECT 'SELECT * FROM profiles;' AS query1;
 SELECT 'SELECT * FROM emails LIMIT 5;' AS query2;
+
+select to_regclass('public.emails') as emails_table,
+       to_regclass('public.profiles') as profiles_table;
+
+select trigger_name
+from information_schema.triggers
+where event_object_table = 'profiles'
+order by trigger_name;
+
+select routine_name
+from information_schema.routines
+where routine_schema = 'public'
+  and routine_name in ('handle_new_user', 'update_updated_at_column', 'alias_exists')
+order by routine_name;

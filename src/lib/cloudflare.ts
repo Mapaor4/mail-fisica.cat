@@ -5,7 +5,6 @@
 const CLOUDFLARE_API_KEY = process.env.CLOUDFLARE_API_KEY;
 const CLOUDFLARE_ZONE_ID = process.env.CLOUDFLARE_ZONE_ID;
 const CLOUDFLARE_API_URL = 'https://api.cloudflare.com/client/v4';
-const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mail.example.com';
 
 interface CloudflareDNSRecord {
@@ -15,6 +14,7 @@ interface CloudflareDNSRecord {
   content: string;
   ttl: number;
   proxied?: boolean;
+  priority?: number;
 }
 
 /**
@@ -35,6 +35,88 @@ export function buildForwardEmailDNS(alias: string, forwardTo?: string): string 
   }
   
   return `"forward-email=${alias}:${webhookUrl}"`;
+}
+
+/**
+ * Ensure the domain has the MX records required by ForwardEmail.
+ */
+export async function ensureForwardEmailMXRecords(): Promise<{ success: boolean; error?: string }> {
+  if (!CLOUDFLARE_API_KEY || !CLOUDFLARE_ZONE_ID) {
+    console.error('❌ Cloudflare credentials not configured');
+    return {
+      success: false,
+      error: 'Cloudflare API not configured',
+    };
+  }
+
+  try {
+    const response = await fetch(
+      `${CLOUDFLARE_API_URL}/zones/${CLOUDFLARE_ZONE_ID}/dns_records?type=MX&name=@`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${CLOUDFLARE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        error: data.errors?.[0]?.message || 'Failed to list MX records',
+      };
+    }
+
+    const requiredRecords = [
+      { content: 'mx1.forwardemail.net', priority: 10 },
+      { content: 'mx2.forwardemail.net', priority: 10 },
+    ];
+
+    const existingRecords = (data.result as CloudflareDNSRecord[] | undefined) || [];
+    const missingRecords = requiredRecords.filter(
+      (record) => !existingRecords.some((existing) => existing.content === record.content && existing.priority === record.priority)
+    );
+
+    for (const record of missingRecords) {
+      const createResponse = await fetch(
+        `${CLOUDFLARE_API_URL}/zones/${CLOUDFLARE_ZONE_ID}/dns_records`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${CLOUDFLARE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'MX',
+            name: '@',
+            content: record.content,
+            priority: record.priority,
+            ttl: 3600,
+            proxied: false,
+          }),
+        }
+      );
+
+      const createData = await createResponse.json();
+
+      if (!createResponse.ok || !createData.success) {
+        return {
+          success: false,
+          error: createData.errors?.[0]?.message || `Failed to create MX record ${record.content}`,
+        };
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 }
 
 /**

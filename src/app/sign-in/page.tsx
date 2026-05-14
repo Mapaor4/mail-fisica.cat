@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
@@ -14,21 +14,16 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createClient();
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await authClient.signIn.email({ email, password });
 
       if (error) {
-        setError(error.message);
+        setError(error.message || 'Sign in failed');
       } else {
         router.push('/dashboard/inbox');
         router.refresh();

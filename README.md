@@ -73,8 +73,8 @@ Copy `.env.example` to `.env.local` and fill in your domain info.
 
 ```bash
 # Domain info
-APEX_DOMAIN=example.com
-SITE_URL=https://mail.example.com
+NEXT_PUBLIC_APEX_DOMAIN=example.com
+NEXT_PUBLIC_SITE_URL=https://mail.example.com
 
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url

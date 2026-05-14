@@ -2,46 +2,65 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Inbox, Send, Mail, Activity, Beaker, LogOut, Settings, Users, Menu, X } from 'lucide-react';
+import { Inbox, Send, Mail, Activity, LogOut, Settings, Users, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import type { Profile } from '@/lib/types/auth';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
+const parseJsonResponse = async <T,>(response: Response): Promise<T | null> => {
+  const responseText = await response.text();
+
+  if (!responseText) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(responseText) as T;
+  } catch {
+    return null;
+  }
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (data) {
-          setProfile(data);
+      const response = await fetch('/api/forwarding');
+      if (response.ok) {
+        const data = await parseJsonResponse<{
+          success?: boolean;
+          alias?: string;
+          email?: string;
+          forward_to?: string | null;
+          role?: string;
+        }>(response);
+        if (data?.success) {
+          setProfile({
+            id: 'current',
+            alias: data.alias ?? '',
+            email: data.email ?? '',
+            forward_to: data.forward_to ?? null,
+            role: data.role === 'admin' ? 'admin' : 'user',
+            created_at: '',
+            updated_at: '',
+          });
         }
       }
       setLoading(false);
     }
 
     loadProfile();
-  }, [supabase]);
+  }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await authClient.signOut();
     router.push('/sign-in');
     router.refresh();
   };
