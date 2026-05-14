@@ -120,7 +120,7 @@ function ComposeForm() {
           router.push('/dashboard/sent');
         }, 1500);
       } else {
-        setError(data.error || responseText || "Hi ha hagut un error en l'enviament");
+        setError(data?.error || responseText || "Hi ha hagut un error en l'enviament");
       }
     } catch (err) {
       setError('Hi ha hagut un error enviant el correu electrònic');

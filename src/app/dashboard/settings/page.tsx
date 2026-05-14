@@ -99,7 +99,7 @@ export default function SettingsPage() {
         });
         setProfile(prev => prev ? { ...prev, forward_to: forwardTo || null } : null);
       } else {
-        setMessage({ type: 'error', text: data.error || "Hi ha hagut un error actualitzant l'adreça redirecció" });
+        setMessage({ type: 'error', text: data?.error || "Hi ha hagut un error actualitzant l'adreça redirecció" });
       }
     } catch (error) {
       console.error('Failed to update forwarding:', error);
@@ -132,7 +132,7 @@ export default function SettingsPage() {
         await authClient.signOut();
         router.push('/sign-in');
       } else {
-        setMessage({ type: 'error', text: data.error || 'Hi ha hagut un error eliminant el compte' });
+        setMessage({ type: 'error', text: data?.error || 'Hi ha hagut un error eliminant el compte' });
         setDeleting(false);
         setShowDeleteConfirm(false);
       }
