@@ -1,19 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { createForwardEmailDNS, updateForwardEmailDNS, listForwardEmailDNS } from '@/lib/cloudflare';
+import { auth } from '@/lib/auth/server';
+import { createAuthedClient } from '@/lib/neon/client';
+import { createForwardEmailDNS, updateForwardEmailDNS, listForwardEmailDNS, ensureForwardEmailMXRecords } from '@/lib/cloudflare';
 
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: session, error: authError } = await auth.getSession();
 
-    if (authError || !user) {
+    if (authError || !session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
+
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const dbClient = createAuthedClient(tokenData.token);
 
     // Parse request body
     const body = await request.json();
@@ -36,12 +47,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const mxResult = await ensureForwardEmailMXRecords();
+
+    if (!mxResult.success) {
+      console.warn('ForwardEmail MX provisioning skipped or failed:', mxResult.error);
+    }
+
     // Store DNS record ID in profiles table for future updates
     if (result.record?.id) {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await dbClient
         .from('profiles')
-        .update({ dns_record_id: result.record.id })
-        .eq('user_id', user.id);
+        .update({ dns_record_id: result.record.id, forward_to: forwardTo || null })
+        .eq('id', session.user.id);
 
       if (updateError) {
         console.error('Failed to store dns_record_id:', updateError);
@@ -67,21 +84,31 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     // Verify user is authenticated
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: session, error: authError } = await auth.getSession();
 
-    if (authError || !user) {
+    if (authError || !session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const dbClient = createAuthedClient(tokenData.token);
+
     // Get user's profile with dns_record_id
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await dbClient
       .from('profiles')
       .select('alias, dns_record_id')
-      .eq('user_id', user.id)
+      .eq('id', session.user.id)
       .single();
 
     if (profileError || !profile) {
@@ -110,10 +137,10 @@ export async function PATCH(request: NextRequest) {
         if (existingRecord?.id) {
           recordId = existingRecord.id;
           // Store it for future use
-          await supabase
+          await dbClient
             .from('profiles')
             .update({ dns_record_id: recordId })
-            .eq('user_id', user.id);
+            .eq('id', session.user.id);
         }
       }
     }
@@ -134,6 +161,17 @@ export async function PATCH(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    const mxResult = await ensureForwardEmailMXRecords();
+
+    if (!mxResult.success) {
+      console.warn('ForwardEmail MX provisioning skipped or failed:', mxResult.error);
+    }
+
+    await dbClient
+      .from('profiles')
+      .update({ forward_to: forwardTo || null })
+      .eq('id', session.user.id);
 
     return NextResponse.json({
       success: true,

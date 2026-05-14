@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { buildForwardEmailDNS } from '@/lib/cloudflare';
+import { auth } from '@/lib/auth/server';
+import { createAuthedClient } from '@/lib/neon/client';
+import { buildForwardEmailDNS, ensureForwardEmailMXRecords } from '@/lib/cloudflare';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
@@ -10,22 +11,26 @@ const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
 // GET - Get current forwarding configuration for authenticated user
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
     // Get authenticated user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: session } = await auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dbClient = createAuthedClient(tokenData.token);
+
     // Get user's profile with forwarding info
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await dbClient
       .from('profiles')
-      .select('alias, email, forward_to')
-      .eq('id', user.id)
+      .select('alias, email, forward_to, role')
+      .eq('id', session.user.id)
       .single();
 
     if (profileError || !profile) {
@@ -40,6 +45,7 @@ export async function GET() {
       alias: profile.alias,
       email: profile.email,
       forward_to: profile.forward_to,
+      role: profile.role,
       forwarding_enabled: !!profile.forward_to,
     });
   } catch (error) {
@@ -54,16 +60,20 @@ export async function GET() {
 // POST - Update forwarding configuration (creates/updates Cloudflare DNS record)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
     // Get authenticated user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: session } = await auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dbClient = createAuthedClient(tokenData.token);
 
     const body = await request.json();
     const { forward_to } = body;
@@ -77,10 +87,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await dbClient
       .from('profiles')
       .select('alias, email')
-      .eq('id', user.id)
+      .eq('id', session.user.id)
       .single();
 
     if (profileError || !profile) {
@@ -91,10 +101,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Update profile with new forward_to value
-    const { error: updateError } = await supabase
+    const { error: updateError } = await dbClient
       .from('profiles')
       .update({ forward_to: forward_to || null })
-      .eq('id', user.id);
+      .eq('id', session.user.id);
 
     if (updateError) {
       console.error('Failed to update profile:', updateError);
@@ -116,6 +126,12 @@ export async function POST(request: NextRequest) {
           cloudflareApiKey,
           cloudflareZoneId
         );
+
+        const mxResult = await ensureForwardEmailMXRecords();
+
+        if (!mxResult.success) {
+          console.warn('ForwardEmail MX provisioning skipped or failed:', mxResult.error);
+        }
       } catch (cloudflareError) {
         console.error('Cloudflare DNS update failed:', cloudflareError);
         // Don't fail the request, just log the error

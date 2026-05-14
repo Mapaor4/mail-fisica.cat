@@ -2,14 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import Header from '@/components/Header';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
+const parseJsonResponse = async <T,>(response: Response): Promise<T | null> => {
+  const responseText = await response.text();
+
+  if (!responseText) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(responseText) as T;
+  } catch {
+    return null;
+  }
+};
+
 export default function SettingsPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [profile, setProfile] = useState<{ alias: string; email: string; forward_to: string | null } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [forwardTo, setForwardTo] = useState('');
@@ -28,23 +41,29 @@ export default function SettingsPage() {
       setLoading(true);
       
       // Get user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
+      const { data: session } = await authClient.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
       }
       
       const response = await fetch('/api/forwarding');
-      const data = await response.json();
+      const data = await parseJsonResponse<{
+        success?: boolean;
+        error?: string;
+        alias?: string;
+        email?: string;
+        forward_to?: string | null;
+      }>(response);
 
-      if (data.success) {
+      if (response.ok && data?.success) {
         setProfile({
-          alias: data.alias,
-          email: data.email,
-          forward_to: data.forward_to,
+          alias: data.alias ?? '',
+          email: data.email ?? '',
+          forward_to: data.forward_to ?? null,
         });
         setForwardTo(data.forward_to || '');
       } else {
-        setMessage({ type: 'error', text: 'Failed to load profile' });
+        setMessage({ type: 'error', text: data?.error || 'Failed to load profile' });
       }
     } catch (error) {
       console.error('Failed to load profile:', error);
@@ -66,9 +85,14 @@ export default function SettingsPage() {
         body: JSON.stringify({ forward_to: forwardTo || null }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse<{
+        success?: boolean;
+        error?: string;
+        warning?: string;
+        message?: string;
+      }>(response);
 
-      if (data.success) {
+      if (response.ok && data?.success) {
         setMessage({ 
           type: 'success', 
           text: data.warning || data.message || 'Adreça de redirecció actualitzada amb èxit' 
@@ -101,11 +125,11 @@ export default function SettingsPage() {
         body: JSON.stringify({ userId }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse<{ success?: boolean; error?: string }>(response);
 
-      if (data.success) {
+      if (response.ok && data?.success) {
         // Sign out and redirect
-        await supabase.auth.signOut();
+        await authClient.signOut();
         router.push('/sign-in');
       } else {
         setMessage({ type: 'error', text: data.error || 'Hi ha hagut un error eliminant el compte' });

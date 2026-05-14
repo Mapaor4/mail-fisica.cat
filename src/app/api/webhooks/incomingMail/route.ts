@@ -1,47 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { auth } from '@/lib/auth/server';
+import { dbClient } from '@/lib/neon/client';
+import { sql } from '@/lib/neon/server';
 
-const APEX_DOMAIN = process.env.APEX_DOMAIN || 'example.com';
+const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
 // Ensure this route can handle POST requests
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // Use service role for webhooks (no user auth required)
-const getSupabaseServiceClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
-};
-
 // GET endpoint to monitor recent webhook deliveries (admin only)
 export async function GET(request: NextRequest) {
   console.log('GET request to webhook endpoint');
   try {
     // Authenticate user for GET requests
-    const supabaseAuth = await createServerClient();
-    
-    // Get authenticated user
-    const {
-      data: { user },
-    } = await supabaseAuth.auth.getUser();
+    const { data: session } = await auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
-    const { data: profile, error: profileError } = await supabaseAuth
+    const { data: profile, error: profileError } = await dbClient
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('id', session.user.id)
       .single();
 
     if (profileError || !profile || profile.role !== 'admin') {
@@ -51,39 +35,48 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Use service client to fetch data
-    const supabase = getSupabaseServiceClient();
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '10');
 
     // Fetch recent incoming emails as webhook logs
-    const { data, error } = await supabase
-      .from('emails')
-      .select('*')
-      .eq('type', 'incoming')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    const data = await sql`
+      SELECT *
+      FROM public.emails
+      WHERE type = 'incoming'
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `;
 
-    if (error) {
+    if (!data) {
       return NextResponse.json(
-        { error: 'Failed to fetch webhook logs', details: error.message },
+        { error: 'Failed to fetch webhook logs' },
         { status: 500 }
       );
     }
 
+    type WebhookEmail = {
+      id: string | number;
+      from_email: string;
+      to_email: string;
+      subject: string;
+      received_at?: string | null;
+      created_at: string;
+      body?: string | null;
+    };
+
     return NextResponse.json(
-      { 
+      {
         success: true,
         message: 'Recent webhook deliveries (incoming emails)',
         count: data.length,
-        webhooks: data.map(email => ({
+        webhooks: (data as WebhookEmail[]).map((email) => ({
           id: email.id,
           from: email.from_email,
           to: email.to_email,
           subject: email.subject,
           received_at: email.received_at || email.created_at,
-          body_preview: email.body?.substring(0, 100) + '...',
-        }))
+          body_preview: email.body ? `${email.body.substring(0, 100)}...` : '',
+        })),
       },
       { status: 200 }
     );
@@ -133,12 +126,9 @@ export async function POST(request: NextRequest) {
     
     console.log('='.repeat(80));
     console.log('Environment Check:');
-    console.log('- Service Role Key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    console.log('- Supabase URL exists:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('- Database URL exists:', !!process.env.DATABASE_URL);
     console.log('='.repeat(80));
-    
-    const supabase = getSupabaseServiceClient();
-    console.log('Supabase client created');
+    console.log('Neon SQL client ready');
     
     // Now process the parsed body
     const body = parsedBody;
@@ -208,7 +198,7 @@ export async function POST(request: NextRequest) {
     // console.log('Resolved recipients:', recipients);
 
     // Prepare inserts for all found users; track misses
-  const inserts: Array<Record<string, unknown>> = [];
+    const inserts: Array<Record<string, unknown>> = [];
     const missed: string[] = [];
 
     for (const rec of recipients) {
@@ -217,17 +207,13 @@ export async function POST(request: NextRequest) {
         // console.log('Looking up profile for alias:', alias);
 
         // Use maybeSingle() to avoid PGRST116 when no rows
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, alias, email, forward_to')
-          .eq('alias', alias)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('❌ Supabase profiles lookup error for', alias, profileError);
-          missed.push(rec);
-          continue;
-        }
+        const profiles = await sql`
+          SELECT id, alias, email, forward_to
+          FROM public.profiles
+          WHERE alias = ${alias}
+          LIMIT 1
+        `;
+        const profile = profiles[0] as { id: string; alias: string; email: string; forward_to: string | null } | undefined;
 
         if (!profile) {
           console.warn('⚠️ No profile found for alias:', alias);
@@ -277,33 +263,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert one or many email rows in a single call
-    const { data, error } = await supabase
-      .from('emails')
-      .insert(inserts)
-      .select();
-
-    if (error) {
-      console.error('❌ Supabase error inserting emails:', error);
-      return NextResponse.json(
-        { error: 'Failed to store email(s)', details: error.message },
-        { status: 500 }
-      );
-    }
-
-    // data is an array of inserted rows
-    // console.log('Emails stored successfully. Count:', Array.isArray(data) ? data.length : 1);
-
     type InsertedRow = { id: string | number; user_id: string | number; to_email: string };
-    const created: InsertedRow[] = Array.isArray(data)
-      ? (data as unknown[]).map(d => {
-          const row = d as Record<string, unknown>;
-          return {
-            id: row.id as string | number,
-            user_id: row.user_id as string | number,
-            to_email: String(row.to_email || ''),
-          };
-        })
-      : [{ id: (data as unknown as Record<string, unknown>).id as string | number, user_id: (data as unknown as Record<string, unknown>).user_id as string | number, to_email: String((data as unknown as Record<string, unknown>).to_email || '') }];
+    const created: InsertedRow[] = [];
+
+    for (const insert of inserts) {
+      const [row] = await sql`
+        INSERT INTO public.emails (
+          user_id,
+          from_email,
+          to_email,
+          subject,
+          body,
+          html_body,
+          received_at,
+          type,
+          is_read,
+          message_id,
+          attachments,
+          metadata
+        ) VALUES (
+          ${insert.user_id},
+          ${insert.from_email},
+          ${insert.to_email},
+          ${insert.subject},
+          ${insert.body},
+          ${insert.html_body},
+          ${insert.received_at},
+          ${insert.type},
+          ${insert.is_read},
+          ${insert.message_id},
+          ${JSON.stringify(insert.attachments)}::jsonb,
+          ${JSON.stringify(insert.metadata)}::jsonb
+        )
+        RETURNING id, user_id, to_email
+      `;
+      if (row) {
+        created.push(row as InsertedRow);
+      }
+    }
 
     return NextResponse.json(
       {

@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { auth } from '@/lib/auth/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: session } = await auth.getSession();
 
-  if (user) {
+  if (session?.user) {
     redirect('/dashboard/inbox');
   } else {
     redirect('/sign-in');

@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { auth } from '@/lib/auth/server';
+import { createAuthedClient } from '@/lib/neon/client';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: session, error: authError } = await auth.getSession();
 
     if (authError) {
       return NextResponse.json({ 
@@ -15,21 +14,29 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const dbClient = createAuthedClient(tokenData.token);
+
     // Try to get profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await dbClient
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', session.user.id)
       .single();
 
     return NextResponse.json({
       success: true,
-      user_id: user.id,
-      user_email: user.email,
+      user_id: session.user.id,
+      user_email: session.user.email,
       profile_found: !!profile,
       profile_error: profileError?.message || null,
       profile_data: profile,

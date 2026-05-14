@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { auth } from '@/lib/auth/server';
+import { createAuthedClient } from '@/lib/neon/client';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
     // Get authenticated user
-    const {
-      data: { user },
-      error: authError
-    } = await supabase.auth.getUser();
+    const { data: session, error: authError } = await auth.getSession();
 
     if (authError) {
       console.error('Auth error in emails GET:', authError);
@@ -19,11 +15,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Fetching emails for user:', user.id, user.email);
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dbClient = createAuthedClient(tokenData.token);
+
+    console.log('Fetching emails for user:', session.user.id, session.user.email);
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type'); // 'incoming', 'outgoing', or null for all
@@ -31,10 +35,10 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Build query filtered by user_id (RLS will also enforce this)
-    let query = supabase
+    let query = dbClient
       .from('emails')
       .select('*', { count: 'exact' })
-      .eq('user_id', user.id)
+      .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -45,12 +49,12 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
 
     if (error) {
-      console.error('Supabase error fetching emails:', {
+      console.error('Neon error fetching emails:', {
         code: error.code,
         message: error.message,
         details: error.details,
         hint: error.hint,
-        user_id: user.id,
+        user_id: session.user.id,
         type: type
       });
       return NextResponse.json(
@@ -63,7 +67,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`Found ${data?.length || 0} emails for user ${user.id}`);
+    console.log(`Found ${data?.length || 0} emails for user ${session.user.id}`);
 
     return NextResponse.json(
       { 
@@ -87,14 +91,10 @@ export async function GET(request: NextRequest) {
 // PATCH endpoint to mark email as read
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
     // Get authenticated user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: session } = await auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -109,16 +109,23 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update email (RLS ensures user can only update their own emails)
-    const { data, error } = await supabase
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dbClient = createAuthedClient(tokenData.token);
+    const { data, error } = await dbClient
       .from('emails')
       .update({ is_read })
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', session.user.id)
       .select()
       .single();
 
     if (error) {
-      console.error('Supabase error:', error);
+      console.error('Neon error:', error);
       return NextResponse.json(
         { error: 'Failed to update email', details: error.message },
         { status: 500 }
