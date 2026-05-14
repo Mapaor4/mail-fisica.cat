@@ -67,9 +67,9 @@ export default function InboxPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <Header title="Safata d'entrada" />
+        <Header title="Inbox" />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-gray-500 dark:text-gray-400">Carregant correus electrònics...</div>
+          <div className="text-gray-500 dark:text-gray-400">Loading emails...</div>
         </div>
       </div>
     );
@@ -78,7 +78,7 @@ export default function InboxPage() {
   return (
     <div className="flex flex-col h-full">
       <Header 
-        title="Safata d'entrada" 
+        title="Inbox" 
         onRefresh={() => fetchEmails(true)} 
         isRefreshing={isRefreshing}
       />
@@ -105,7 +105,7 @@ export default function InboxPage() {
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              <p>Selecciona un correu electrònic per visualitzar-lo</p>
+              <p>Select an email to view</p>
             </div>
           )}
         </div>

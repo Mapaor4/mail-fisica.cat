@@ -9,6 +9,10 @@ import { Lock, User, AlertCircle, Forward } from 'lucide-react';
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 const PASSPHRASE_HINT = process.env.NEXT_PUBLIC_PASSPHRASE_HINT || 'No hint provided. You need to know the passphrase.';
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 /**
  * Sign Up Form Component - Client Component
  * Handles all interactive form logic including alias checking and user creation
@@ -82,19 +86,33 @@ export default function SignUpForm() {
 
     // Validation
     if (alias.length < 2) {
-      setError("L'Alias ha de tenir mínim 2 caràcters");
+      setError('Alias must be at least 2 characters');
       setLoading(false);
       return;
     }
 
     if (password.length < 8) {
-      setError("La contrasenya ha de tenir mínim 8 caràcters");
+      setError('Password must be at least 8 characters');
       setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Les contrasenyes no coincideixen');
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    const trimmedForwardTo = forwardTo.trim();
+
+    if (!trimmedForwardTo) {
+      setError('Forward to email is required');
+      setLoading(false);
+      return;
+    }
+
+    if (!isValidEmail(trimmedForwardTo)) {
+      setError('Enter a valid forward to email address');
       setLoading(false);
       return;
     }
@@ -124,7 +142,7 @@ export default function SignUpForm() {
           },
           body: JSON.stringify({
             alias,
-            forwardTo: forwardTo || undefined,
+            forwardTo: trimmedForwardTo,
           }),
         });
 
@@ -132,14 +150,14 @@ export default function SignUpForm() {
           const dnsError = await dnsResponse.json();
           console.error('DNS creation failed:', dnsError);
           setDnsWarning(
-            'Compte creat amb èxit, però la configuració de DNS ha fallat. Si us plau, contacta amb admin@fisica.cat.'
+            'Account created successfully, but DNS setup failed. Please contact the administrator to complete email setup.'
           );
           // Don't block sign-up, continue to dashboard
         }
       } catch (dnsError) {
         console.error('DNS request failed:', dnsError);
         setDnsWarning(
-          'Compte creat amb èxit, però la configuració de DNS ha fallat. Si us plau, contacta amb admin@fisica.cat.'
+          'Account created successfully, but DNS setup failed. Please contact the administrator to complete email setup.'
         );
         // Don't block sign-up, continue to dashboard
       }
@@ -149,7 +167,7 @@ export default function SignUpForm() {
       router.refresh();
     } catch (err) {
       console.error('Unexpected error during sign-up:', err);
-      setError('Hi ha hagut un error inesperat');
+      setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -161,7 +179,7 @@ export default function SignUpForm() {
         {/* Alias Field */}
         <div>
           <label htmlFor="alias" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tria el teu alias *
+            Choose your alias *
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -177,14 +195,14 @@ export default function SignUpForm() {
             />
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            El teu correu electrònic serà: <strong>{alias || 'alias'}@{APEX_DOMAIN}</strong>
+            Your email will be: <strong>{alias || 'alias'}@{APEX_DOMAIN}</strong>
           </p>
         </div>
 
         {/* Password Field */}
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Contrasenya *
+            Password *
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -199,13 +217,13 @@ export default function SignUpForm() {
               disabled={loading}
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Mínim 8 caràcters</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 8 characters</p>
         </div>
 
         {/* Confirm Password Field */}
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Confirma la contrasenya *
+            Confirm Password *
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -225,7 +243,7 @@ export default function SignUpForm() {
         {/* Forward To Field (Optional) */}
         <div>
           <label htmlFor="forwardTo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Redirigir a (opcional)
+            Forward to *
           </label>
           <div className="relative">
             <Forward className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -234,20 +252,21 @@ export default function SignUpForm() {
               type="email"
               value={forwardTo}
               onChange={(e) => setForwardTo(e.target.value)}
-              placeholder="mailpersonal@gmail.com"
+              placeholder="your.email@gmail.com"
+              required
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               disabled={loading}
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Els correus electrònics que rebis s&apos;enviaran també automàticament a aquesta adreça de correu electrònic.
+            Incoming emails will be forwarded to this address.
           </p>
         </div>
 
         {/* Organization Passphrase Field */}
         <div>
           <label htmlFor="orgPassphrase" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Clau de pas *
+            Organization Passphrase *
           </label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -256,14 +275,14 @@ export default function SignUpForm() {
               type="password"
               value={orgPassphrase}
               onChange={(e) => setOrgPassphrase(e.target.value)}
-              placeholder="Introdueix la clau de pas"
+              placeholder="Enter organization passphrase"
               required
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               disabled={loading}
             />
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Per evitar que gent random cal una clau de pas que si ets alumne hauries de saber. <br></br><br></br>Pista: {PASSPHRASE_HINT}
+            Hint: {PASSPHRASE_HINT}
           </p>
         </div>
 
@@ -289,16 +308,16 @@ export default function SignUpForm() {
           disabled={loading}
           className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? 'Creant compte...' : "Registra't"}
+          {loading ? 'Creating account...' : 'Sign Up'}
         </button>
       </form>
 
       {/* Sign In Link */}
       <div className="mt-6 text-center">
         <p className="text-gray-600 dark:text-gray-400">
-          Ja tens un compte?{' '}
+          Already have an account?{' '}
           <Link href="/sign-in" className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300">
-            Inicia la sessió
+            Sign in
           </Link>
         </p>
       </div>

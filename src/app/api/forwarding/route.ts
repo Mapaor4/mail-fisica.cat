@@ -40,10 +40,28 @@ export async function GET() {
       );
     }
 
+    if (!session.user.email) {
+      return NextResponse.json(
+        { error: 'Authenticated user email is missing' },
+        { status: 500 }
+      );
+    }
+
+    if (profile.email !== session.user.email) {
+      const { error: syncError } = await dbClient
+        .from('profiles')
+        .update({ email: session.user.email })
+        .eq('id', session.user.id);
+
+      if (syncError) {
+        console.error('Failed to sync profile email on read:', syncError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       alias: profile.alias,
-      email: profile.email,
+      email: session.user.email,
       forward_to: profile.forward_to,
       role: profile.role,
       forwarding_enabled: !!profile.forward_to,
@@ -100,10 +118,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!session.user.email) {
+      return NextResponse.json(
+        { error: 'Authenticated user email is missing' },
+        { status: 500 }
+      );
+    }
+
     // Update profile with new forward_to value
     const { error: updateError } = await dbClient
       .from('profiles')
-      .update({ forward_to: forward_to || null })
+      .update({
+        forward_to: forward_to || null,
+        email: session.user.email,
+      })
       .eq('id', session.user.id);
 
     if (updateError) {
@@ -148,10 +176,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: forward_to 
-        ? `Forwarding enabled: ${profile.email} → ${forward_to}` 
+        ? `Forwarding enabled: ${session.user.email} → ${forward_to}` 
         : 'Forwarding disabled',
       alias: profile.alias,
-      email: profile.email,
+      email: session.user.email,
       forward_to: forward_to || null,
     });
   } catch (error) {
