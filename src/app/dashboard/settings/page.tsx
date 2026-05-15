@@ -7,6 +7,12 @@ import Header from '@/components/Header';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isValidEmail = (email: string): boolean => {
+  return EMAIL_REGEX.test(email);
+};
+
 const parseJsonResponse = async <T,>(response: Response): Promise<T | null> => {
   const responseText = await response.text();
 
@@ -75,6 +81,17 @@ export default function SettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!forwardTo.trim()) {
+      setMessage({ type: 'error', text: 'Email forwarding address is required' });
+      return;
+    }
+
+    if (!isValidEmail(forwardTo)) {
+      setMessage({ type: 'error', text: 'Please enter a valid email address' });
+      return;
+    }
+
     setSaving(true);
     setMessage(null);
 
@@ -82,7 +99,7 @@ export default function SettingsPage() {
       const response = await fetch('/api/forwarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ forward_to: forwardTo || null }),
+        body: JSON.stringify({ forward_to: forwardTo }),
       });
 
       const data = await parseJsonResponse<{
@@ -97,7 +114,7 @@ export default function SettingsPage() {
           type: 'success', 
           text: data.warning || data.message || 'Forwarding updated successfully' 
         });
-        setProfile(prev => prev ? { ...prev, forward_to: forwardTo || null } : null);
+        setProfile(prev => prev ? { ...prev, forward_to: forwardTo } : null);
       } else {
         setMessage({ type: 'error', text: data?.error || 'Failed to update forwarding' });
       }
@@ -180,20 +197,21 @@ export default function SettingsPage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Email Forwarding</h2>
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          Forward incoming emails to an external email address. Leave blank to disable forwarding.
+          Forward incoming emails to an external email address. This is required.
         </p>
 
         <form onSubmit={handleSave} className="space-y-4">
           <div>
             <label htmlFor="forward_to" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Forward To
+              Forward To *
             </label>
             <input
               type="email"
               id="forward_to"
               value={forwardTo}
               onChange={(e) => setForwardTo(e.target.value)}
-              placeholder="external@email.com"
+              placeholder="your-email@example.com"
+              required
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
@@ -213,21 +231,11 @@ export default function SettingsPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || !forwardTo.trim() || !isValidEmail(forwardTo)}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
-            {forwardTo && (
-              <button
-                type="button"
-                onClick={() => setForwardTo('')}
-                disabled={saving}
-                className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
-              >
-                Remove
-              </button>
-            )}
           </div>
         </form>
 
@@ -245,9 +253,8 @@ export default function SettingsPage() {
       <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
         <h3 className="font-semibold mb-2 text-gray-900 dark:text-white">How it works</h3>
         <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-          <li>Emails sent to your {APEX_DOMAIN} address will be stored in your inbox</li>
-          <li>If forwarding is enabled, emails will also be sent to your external address</li>
-          <li>You can disable forwarding at any time by clearing the field</li>
+          <li>Email forwarding to an external address is required for emails to reach an actual destination</li>
+          <li>Emails sent to your {APEX_DOMAIN} address will be shown in your inbox and also forwarded</li>
           <li>Forwarding uses DNS configuration and may take a few minutes to propagate</li>
         </ul>
       </div>
