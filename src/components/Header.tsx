@@ -1,15 +1,25 @@
 'use client';
 
-import { RefreshCw, Moon, Sun } from 'lucide-react';
+import { Bell, RefreshCw, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface HeaderProps {
   title: string;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  onEnableNotifications?: () => void;
+  isEnablingNotifications?: boolean;
+  notificationPermission?: 'default' | 'granted' | 'denied' | 'unsupported';
 }
 
-export default function Header({ title, onRefresh, isRefreshing }: HeaderProps) {
+export default function Header({
+  title,
+  onRefresh,
+  isRefreshing,
+  onEnableNotifications,
+  isEnablingNotifications,
+  notificationPermission,
+}: HeaderProps) {
   const { toggleTheme } = useTheme();
 
   console.log('Header rendered');
@@ -19,6 +29,25 @@ export default function Header({ title, onRefresh, isRefreshing }: HeaderProps) 
       <h2 className="ml-14 text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white lg:ml-0">{title}</h2>
       
       <div className="flex items-center gap-2 sm:gap-3">
+        {onEnableNotifications && (
+          <button
+            onClick={onEnableNotifications}
+            disabled={notificationPermission === 'granted' || notificationPermission === 'unsupported' || isEnablingNotifications}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Bell className={`w-4 h-4 ${notificationPermission === 'granted' ? 'text-green-600 dark:text-green-400' : ''}`} />
+            <span className="hidden sm:inline">
+              {notificationPermission === 'granted'
+                ? 'Alerts on'
+                : isEnablingNotifications
+                  ? 'Enabling...'
+                  : notificationPermission === 'unsupported'
+                    ? 'Notifications unavailable'
+                    : 'Enable alerts'}
+            </span>
+          </button>
+        )}
+
         {onRefresh && (
           <button
             onClick={onRefresh}

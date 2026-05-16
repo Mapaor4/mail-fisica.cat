@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Header from '@/components/Header';
 import EmailList from '@/components/EmailList';
 import EmailDetail from '@/components/EmailDetail';
 import { Email } from '@/lib/types';
+
+type NotificationPermissionState = 'default' | 'granted' | 'denied' | 'unsupported';
 
 export default function InboxPage() {
   const [emails, setEmails] = useState<Email[]>([]);
@@ -12,8 +14,67 @@ export default function InboxPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showEmailList, setShowEmailList] = useState(true);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermissionState>('default');
+  const [isEnablingNotifications, setIsEnablingNotifications] = useState(false);
+  const seenEmailIdsRef = useRef<Set<string>>(new Set());
+  const hasSeededEmailsRef = useRef(false);
+  const serviceWorkerRegistrationRef = useRef<ServiceWorkerRegistration | null>(null);
 
-  const fetchEmails = async (showRefreshing = false) => {
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    } else {
+      setNotificationPermission('unsupported');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (notificationPermission !== 'granted' || !('serviceWorker' in navigator)) {
+      return;
+    }
+
+    void navigator.serviceWorker.ready.then((registration) => {
+      serviceWorkerRegistrationRef.current = registration;
+    });
+  }, [notificationPermission]);
+
+  const notifyAboutNewEmails = useCallback(async (freshEmails: Email[]) => {
+    if (notificationPermission !== 'granted' || freshEmails.length === 0) {
+      return;
+    }
+
+    if (document.visibilityState === 'visible' && document.hasFocus()) {
+      return;
+    }
+
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
+    const registration = serviceWorkerRegistrationRef.current || await navigator.serviceWorker.ready;
+    serviceWorkerRegistrationRef.current = registration;
+
+    for (const email of freshEmails.slice(0, 3)) {
+      const bodyPreview = email.body?.trim() || email.html_body?.trim() || 'Open the inbox to read the message.';
+
+      await registration.showNotification(`New email from ${email.from_email}`, {
+        body: `${email.subject}\n${bodyPreview}`.trim(),
+        icon: '/pwa-icon.svg',
+        badge: '/pwa-icon.svg',
+        tag: `email-${email.id}`,
+        data: {
+          url: '/dashboard/inbox',
+          emailId: email.id,
+        },
+      });
+    }
+  }, [notificationPermission]);
+
+  const fetchEmails = useCallback(async (showRefreshing = false, notifyNewEmails = false) => {
     if (showRefreshing) setIsRefreshing(true);
     else setIsLoading(true);
 
@@ -22,9 +83,18 @@ export default function InboxPage() {
         cache: 'no-store',
       });
       const data = await response.json();
-      
+
       if (data.success) {
-        setEmails(data.emails);
+        const nextEmails = data.emails as Email[];
+
+        if (notifyNewEmails && hasSeededEmailsRef.current) {
+          const freshEmails = nextEmails.filter((email) => !seenEmailIdsRef.current.has(String(email.id)));
+          await notifyAboutNewEmails(freshEmails);
+        }
+
+        setEmails(nextEmails);
+        seenEmailIdsRef.current = new Set(nextEmails.map((email) => String(email.id)));
+        hasSeededEmailsRef.current = true;
       }
     } catch (error) {
       console.error('Error fetching emails:', error);
@@ -32,11 +102,50 @@ export default function InboxPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [notifyAboutNewEmails]);
+
+  const handleEnableNotifications = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotificationPermission('unsupported');
+      return;
+    }
+
+    setIsEnablingNotifications(true);
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+
+      if (permission === 'granted' && 'serviceWorker' in navigator) {
+        serviceWorkerRegistrationRef.current = await navigator.serviceWorker.ready;
+      }
+    } finally {
+      setIsEnablingNotifications(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchEmails();
-  }, []);
+    void fetchEmails();
+  }, [fetchEmails]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void fetchEmails(true, true);
+    }, 30000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchEmails(true, true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchEmails]);
 
   const handleEmailClick = async (email: Email) => {
     setSelectedEmail(email);
@@ -121,6 +230,9 @@ export default function InboxPage() {
         title="Inbox" 
         onRefresh={() => fetchEmails(true)} 
         isRefreshing={isRefreshing}
+        onEnableNotifications={handleEnableNotifications}
+        isEnablingNotifications={isEnablingNotifications}
+        notificationPermission={notificationPermission}
       />
       
       <div className="flex-1 overflow-hidden flex">
