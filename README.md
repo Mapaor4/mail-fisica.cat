@@ -47,13 +47,15 @@ All pages have a dark mode available as well.
 - SMTP2GO for sending emails manually
 - (Optionally) Mailgun for sending automated emails.
 - Cloudflare dashboard and Cloudflare API for managing DNS
-- Cron-job.org for keeping the Supabase project active.
 
 ### Context
 
 If you have a domain, you can send and receive mails at your domain for free! There are multiple ways of doing that, one would be to set up your own mail server (self-hosted options like Postfix or similar), the problem is that is hard to achieve and maintain good email reputation for your domain and server IP. Another option would be to use Zoho or other mail providers, but their free tier, as generous as it is, is normally limited to a specific number of accounts (or aliases) and lot's of features (like email routing, webhooks, etc.) are only available as paid plans.
 
-Then what does this repository do? It uses already existing and popular services like ForwardEmail (for receiving emails) SMPT2GO (for sending emails), Cloudflare (for managing DNS), Vercel (for hosting the NextJS web app) or Supabase (for hosting the database), allowing for a totally customizable email dashboard for sending and receiving emails at your apex domain.
+Then what does this repository do? It uses already existing and popular services like ForwardEmail (for receiving emails) SMPT2GO (for sending emails), Cloudflare (for managing DNS), Vercel (for hosting the NextJS web app) or Neon (for hosting the database), allowing for a totally customizable email dashboard for sending and receiving emails at your apex domain.
+
+#### Little note
+Previously this repository was designed to work with Supabase. But they changed their policy and projects now get paused after 7 days of inactivity, and cron-jobs are no longer a reliable method to keep the database active. So we did the migration and now it is designed to work with Neon Database, which is also free, open-source, and does not pause the database (simply has a cold start of 300-500 ms, which is perfectly acceptable).
 
 ## Getting Started
 
