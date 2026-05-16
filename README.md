@@ -1,6 +1,6 @@
 ## Overview
 
-A minimalistic, modern email dashboard for sending and receiving mail at a custom domain for Free. Using SMTP2GO, ForwardEmail, Supabase and Cloudflare.
+A minimalistic, modern email dashboard for sending and receiving mail at a custom domain for Free. Using SMTP2GO, ForwardEmail, Neon Database and Cloudflare.
 
 ![](/public/screenshots/inbox.png)
 
@@ -42,7 +42,7 @@ All pages have a dark mode available as well.
 ### Tech used
 
 - Next.js 16 (with App Router), Tailwind CSS and Typescript.
-- PostgreSQL with RLS and authentication (managed via Supabase and Supabase Auth).
+- PostgreSQL with RLS and authentication (managed via Neon and Neon Auth).
 - ForwardEmail for receiving emails (and forwarding them to other mail addressed and webhooks endpoints).
 - SMTP2GO for sending emails manually
 - (Optionally) Mailgun for sending automated emails.
@@ -90,9 +90,7 @@ CLOUDFLARE_ZONE_ID=your_cloudflare_zone_id
 CLOUDFLARE_API_KEY=your_cloudflare_api_key
 ```
 
-You can obtain your Supabase environment variables following [SUPABSE_GUIDE.md](./SUPABASE_GUIDE.md). Make sure you get your database properly configured (as explained in the guide) before doing anything.
-
-To obtain your Cloudflare API environment variables (as well as SMTP2GO API Key) follow the [CLOUDFLARE_GUIDE.md](./CLOUDFLARE_GUIDE.md).
+Configure environment variables for Neon, Neon Auth and Cloudflare as described in the repo docs. Make sure your database and auth are configured before running the app.
 
 ### Promoting an Admin
 
@@ -130,54 +128,6 @@ Then deploy it.
 5. Add your custom subdomain [mail.example.com](mail.example.com) to the deployed Vercel project
 
 Now every time a commit gets pushed to GitHub, Vercel will automatically redeploy the site.
-
-## Keeping the Supabase project active
-Great, you've managed to deploy your site and your mail dashboard is working correctly both for sending and receiving emails. It works now, however if no one sends you (or you sent) an email in 7 days, the Supabase project will be paused. 
-
-This is a limit of the Supabase Free Tier, but it can be easily overcome. The trick is very simple and explained in the following toggle.
-
-<details>
-<summary>How to set up a cron job to avoid your Supabase project getting paused</summary>
-
-
-### The idea
-This NextJS project already has an api route implemented (with no authentication required) called `supabase-keep-alive` so that when you visit https://your-site.com/api/supabase-keep-alive the website (Vercel) performs a GET request to Supabase. 
-
-The idea is then to create cron-job that "visits" this link periodically. This way our Supabase project will remain "active" and won't get paused.
-
-### What does the api route do?
-
-
-Specifically it fetches the total number of profiles. So the user count number is the only data accessible via this endpoint which is accessible by anyone. You could say you are "exposing" sensible data, but it's only one number and you do *need* to fetch some actual data for keeping the project alive. The less sensible one I could think of is the total number of users.
-
-Note: The other endpoints don't expose data to the public, they have Row Level Security enabled so that only the NextJS application (which has the Supabase secret API key) can fetch the data. You can see it for yourself (visit any of the other URL endpoints) it won't w work (you'll get redirected).
-
-### How do I setup the cron job?
-
- There are numerous ways to set up a cron job. One of the easiest is just signing up at [cron-job.org](https://cron-job.org) (free and open-source) and creating a cron job there.
-
- Here you can see an example setup for a cron job.
-
-![](/public/screenshots/cron-job-setup.png)
-
-In the example image above, the following cron expression was used: 
-
-```
-0 2 * *  0,3
-```
-Which corresponds to Sunday and Wednesday at 2am. 
-
-If you want to check you've set it up correctly what I recommend is setting the cron-job at the specific hour and day you currently are, for example if it's Thursday 12:32 you set it up at 12:35 (on Thursdays, and some other day like Tuesday or Saturday or both) which would be:
-```
-35 12 * * 2,4,6
-```
-Then you wait 2-3 minutes and check the dashboard or the cron-job history, you should see a successful status.
-
-![](/public/screenshots/cron-job-succesful.jpg)
-
-Once your cron job is active and working your Supabase project should never get paused. However Supabase may change one day their Free Tier policy. If this ever happens don't worry I'll be the first to be notified and I'll think of a fix or a Supabase alternative.
-
-</details>
 
 ## Questions
 If you have any questions contact me at [marti@fisica.cat](mailto:marti@fisica.cat) ;)
