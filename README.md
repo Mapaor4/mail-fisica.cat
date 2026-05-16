@@ -94,6 +94,18 @@ You can obtain your Supabase environment variables following [SUPABSE_GUIDE.md](
 
 To obtain your Cloudflare API environment variables (as well as SMTP2GO API Key) follow the [CLOUDFLARE_GUIDE.md](./CLOUDFLARE_GUIDE.md).
 
+### Promoting an Admin
+
+New users get the `role` set to `user` by default. If you need to grant admin privileges to an existing user you must promote it manually using the Neon console. Run the following `SQL Editor` tab, replacing `<user-id>` with the user's UUID (you can find it in the `Tables` tab):
+
+```sql
+UPDATE public.profiles
+SET role = 'admin'
+WHERE id = '<user-id>';
+```
+
+After running the query the user will have access to admin-only features such as the User Management and Webhook Monitor pages.
+
 
 ## Run locally (development)
 
