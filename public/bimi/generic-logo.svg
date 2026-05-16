@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<svg width="800px" height="800px" viewBox="0 0 100 100" version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg">
+  <title>bimi-svg-tiny-12-ps</title>
+  <g transform="scale(0.521)">
+    <circle cx="96" cy="96" r="74" fill="#0674cf" stroke="none"/>
+    <path d="m 90,48 12,0 0,96 -12,0 z" fill="#FFF"/>
+    <g transform="rotate(60,96,96)">
+      <path d="m 90,48 12,0 0,96 -12,0 z" fill="#FFF"/>
+    </g>
+    <g transform="rotate(-60,96,96)">
+      <path d="m 90,48 12,0 0,96 -12,0 z" fill="#FFF"/>
+    </g>
+  </g>
+</svg>
