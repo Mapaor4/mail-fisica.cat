@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/server';
-import { dbClient } from '@/lib/neon/client';
+import { dbClient, createAuthedClient } from '@/lib/neon/client';
 import { sql } from '@/lib/neon/server';
 import { deleteForwardEmailDNS, listForwardEmailDNS } from '@/lib/cloudflare';
 
@@ -15,7 +15,15 @@ export async function GET() {
     }
 
     // Check if user is admin
-    const { data: profile, error: profileError } = await dbClient
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const authedDb = createAuthedClient(tokenData.token);
+
+    const { data: profile, error: profileError } = await authedDb
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
@@ -68,7 +76,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get current user's profile
-    const { data: profile, error: profileError } = await dbClient
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const authedDb = createAuthedClient(tokenData.token);
+
+    const { data: profile, error: profileError } = await authedDb
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
