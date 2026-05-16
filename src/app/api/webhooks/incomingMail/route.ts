@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/server';
-import { dbClient } from '@/lib/neon/client';
+import { createAuthedClient } from '@/lib/neon/client';
 import { sql } from '@/lib/neon/server';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
@@ -21,8 +21,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: tokenData, error: tokenError } = await auth.token();
+
+    if (!tokenData?.token || tokenError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const authedDb = createAuthedClient(tokenData.token);
+
     // Check if user is admin
-    const { data: profile, error: profileError } = await dbClient
+    const { data: profile, error: profileError } = await authedDb
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
