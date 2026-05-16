@@ -1,4 +1,4 @@
-const RAW_LOGO_PATH = process.env.NEXT_PUBLIC_ORGANIZATION_LOGO_SVG_PATH?.trim() ?? '';
+const RAW_LOGO_PATH = process.env.NEXT_PUBLIC_ORGANIZATION_LOGO_PATH?.trim() ?? '';
 const RAW_SHOW_LOGO = (process.env.NEXT_PUBLIC_SHOW_LOGO ?? '').trim();
 
 const isTruthyEnvValue = (value: string): boolean => /^(1|true|yes|on)$/i.test(value);
