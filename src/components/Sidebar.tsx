@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Inbox, Send, Mail, Activity, LogOut, Settings, Users, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth/client';
 import type { Profile } from '@/lib/types/auth';
+import { organizationLogoSvgPath, shouldShowOrganizationLogo } from '@/lib/branding';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
@@ -112,6 +114,16 @@ export default function Sidebar() {
       }`}>
       <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <div>
+          {shouldShowOrganizationLogo && (
+            <Image
+              src={organizationLogoSvgPath}
+              alt={`${APEX_DOMAIN} organization logo`}
+              width={180}
+              height={48}
+              className="h-10 w-auto mb-2"
+              priority
+            />
+          )}
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{APEX_DOMAIN}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Mail Dashboard</p>
         </div>
