@@ -66,3 +66,31 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url || '/dashboard/inbox';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if ('focus' in client) {
+          client.focus();
+
+          if ('navigate' in client) {
+            client.navigate(targetUrl);
+          }
+
+          return client;
+        }
+      }
+
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+
+      return undefined;
+    })
+  );
+});
