@@ -1,6 +1,6 @@
 ## Overview
 
-A minimalistic, modern email dashboard for sending and receiving mail at a custom domain for Free. Using SMTP2GO, ForwardEmail, Neon Database and Cloudflare.
+A minimalistic, modern email dashboard for sending and receiving mail at a custom domain for free. Using SMTP2GO, ForwardEmail, Neon Database and Cloudflare.
 
 ![](/public/screenshots/inbox.png)
 

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { PwaRegistration } from "@/components/PwaRegistration";
 import type { Metadata } from "next";
 
 const siteDomain = process.env.NEXT_PUBLIC_APEX_DOMAIN || "example.com";
@@ -8,11 +9,14 @@ const siteDescription = "A minimalistic, modern email dashboard for sending and 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mail.example.com";
 
 export const metadata: Metadata = {
+  manifest: "/manifest.webmanifest",
   title: {
     default: siteName,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
+  applicationName: siteName,
+  themeColor: "#0f172a",
   metadataBase: new URL(siteUrl),
   openGraph: {
     type: "website",
@@ -45,7 +49,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico" },
+      { url: "/pwa-icon.svg", type: "image/svg+xml" },
     ],
   },
 };
@@ -83,6 +87,7 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeProvider>
+          <PwaRegistration />
           {children}
         </ThemeProvider>
       </body>
