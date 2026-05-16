@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/server';
 import { createAuthedClient } from '@/lib/neon/client';
+import { sql } from '@/lib/neon/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -92,7 +93,15 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     // Get authenticated user
-    const { data: session } = await auth.getSession();
+    const { data: session, error: authError } = await auth.getSession();
+
+    if (authError) {
+      console.error('Auth error in emails PATCH:', authError);
+      return NextResponse.json(
+        { error: 'Authentication error', details: authError.message },
+        { status: 401 }
+      );
+    }
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -108,27 +117,20 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Update email (RLS ensures user can only update their own emails)
-    const { data: tokenData, error: tokenError } = await auth.token();
+    const updatedRows = await sql`
+      UPDATE public.emails
+      SET is_read = ${is_read}
+      WHERE id = ${id}
+        AND user_id = ${session.user.id}
+      RETURNING *
+    `;
 
-    if (!tokenData?.token || tokenError) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const data = updatedRows[0];
 
-    const dbClient = createAuthedClient(tokenData.token);
-    const { data, error } = await dbClient
-      .from('emails')
-      .update({ is_read })
-      .eq('id', id)
-      .eq('user_id', session.user.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Neon error:', error);
+    if (!data) {
       return NextResponse.json(
-        { error: 'Failed to update email', details: error.message },
-        { status: 500 }
+        { error: 'Failed to update email', details: 'Email not found or not owned by current user' },
+        { status: 404 }
       );
     }
 

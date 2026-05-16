@@ -253,9 +253,10 @@ async function updateCloudflareDNS(
     {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({
-        content: newContent,
-      }),
+        body: JSON.stringify({
+          content: newContent,
+          ttl: 600, // 10 min
+        }),
     }
   );
 

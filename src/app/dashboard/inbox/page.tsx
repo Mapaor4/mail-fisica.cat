@@ -18,7 +18,9 @@ export default function InboxPage() {
     else setIsLoading(true);
 
     try {
-      const response = await fetch('/api/emails?type=incoming');
+      const response = await fetch('/api/emails?type=incoming', {
+        cache: 'no-store',
+      });
       const data = await response.json();
       
       if (data.success) {
@@ -43,18 +45,56 @@ export default function InboxPage() {
     // Mark as read if it's unread
     if (!email.is_read) {
       try {
-        await fetch('/api/emails', {
+        const response = await fetch('/api/emails', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          credentials: 'include',
+          referrerPolicy: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ id: email.id, is_read: true }),
         });
 
-        // Update local state
-        setEmails(emails.map(e => 
-          e.id === email.id ? { ...e, is_read: true } : e
-        ));
+        const responseText = await response.text();
+        const responseData = responseText ? (() => {
+          try {
+            return JSON.parse(responseText) as { email?: Email; error?: string; details?: string };
+          } catch {
+            return null;
+          }
+        })() : null;
+
+        if (!response.ok) {
+          throw new Error(
+            responseData?.details ||
+            responseData?.error ||
+            responseText ||
+            'Failed to mark email as read'
+          );
+        }
+
+        const updatedEmail = responseData?.email;
+
+        if (updatedEmail) {
+          setEmails(prevEmails =>
+            prevEmails.map(existingEmail =>
+              existingEmail.id === updatedEmail.id ? updatedEmail : existingEmail
+            )
+          );
+          setSelectedEmail(prevEmail =>
+            prevEmail?.id === updatedEmail.id ? updatedEmail : prevEmail
+          );
+        } else {
+          setEmails(prevEmails =>
+            prevEmails.map(existingEmail =>
+              existingEmail.id === email.id ? { ...existingEmail, is_read: true } : existingEmail
+            )
+          );
+        }
       } catch (error) {
         console.error('Error marking email as read:', error);
+        fetchEmails(true);
       }
     }
   };
