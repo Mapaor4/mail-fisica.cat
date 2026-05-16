@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { authClient } from '@/lib/auth/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { organizationLogoSvgPath, shouldShowOrganizationLogo } from '@/lib/branding';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
@@ -40,6 +42,16 @@ export default function SignInPage() {
       <div className="max-w-md w-full">
         {/* Logo/Header */}
         <div className="text-center mb-8">
+          {shouldShowOrganizationLogo && (
+            <Image
+              src={organizationLogoSvgPath}
+              alt={`${APEX_DOMAIN} organization logo`}
+              width={240}
+              height={72}
+              className="h-14 w-auto mx-auto mb-4"
+              priority
+            />
+          )}
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{APEX_DOMAIN}</h1>
           <p className="text-gray-600 dark:text-gray-400">Sign in to your email account</p>
         </div>

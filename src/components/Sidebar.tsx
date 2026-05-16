@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Inbox, Send, Mail, Activity, LogOut, Settings, Users, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth/client';
 import type { Profile } from '@/lib/types/auth';
+import { organizationLogoSvgPath, shouldShowOrganizationLogo } from '@/lib/branding';
 
 const APEX_DOMAIN = process.env.NEXT_PUBLIC_APEX_DOMAIN || 'example.com';
 
@@ -110,11 +112,23 @@ export default function Sidebar() {
       <aside className={`w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col fixed lg:static inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <div>
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{APEX_DOMAIN}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Mail Dashboard</p>
         </div>
+        {shouldShowOrganizationLogo && (
+          <div className="shrink-0">
+            <Image
+              src={organizationLogoSvgPath}
+              alt={`${APEX_DOMAIN} organization logo`}
+              height={140}
+              width={48}
+              className="h-12 w-auto"
+              priority
+            />
+          </div>
+        )}
         {/* Close button for mobile */}
         <button
           onClick={closeMobileMenu}
