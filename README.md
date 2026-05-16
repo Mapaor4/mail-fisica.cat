@@ -47,7 +47,6 @@ All pages have a dark mode available as well.
 - SMTP2GO for sending emails manually
 - (Optionally) Mailgun for sending automated emails.
 - Cloudflare dashboard and Cloudflare API for managing DNS
-- Cron-job.org for keeping the Supabase project active.
 
 ### Context
 
