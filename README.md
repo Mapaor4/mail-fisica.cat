@@ -76,11 +76,6 @@ Copy `.env.example` to `.env.local` and fill in your domain info.
 NEXT_PUBLIC_APEX_DOMAIN=example.com
 NEXT_PUBLIC_SITE_URL=https://mail.example.com
 
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-
 # SMTP2GO Configuration
 SMTP2GO_API_KEY=your_smtp2go_api_key
 
@@ -88,9 +83,17 @@ SMTP2GO_API_KEY=your_smtp2go_api_key
 ALLOW_AUTO_REGISTER=TRUE
 CLOUDFLARE_ZONE_ID=your_cloudflare_zone_id
 CLOUDFLARE_API_KEY=your_cloudflare_api_key
+
+# Neon Database
+NEON_AUTH_BASE_URL=https://your-neon-project.neonauth.c-3.eu-central-1.aws.neon.tech/neondb/auth
+NEON_AUTH_COOKIE_SECRET=sFYTmdwOcjQjOWZ31mTusK6qp0ORadCEXPJuijODekk=
+NEON_DATA_API_URL=https://your-neon-project.apirest.c-3.eu-central-1.aws.neon.tech/neondb/rest/v1
+NEON_JWKS_URL=https://your-neon-project.neonauth.c-3.eu-central-1.aws.neon.tech/neondb/auth/.well-known/jwks.json
+# Connection string (also called Database URL)
+NEON_DATABASE_URL='postgresql://neondb_owner:npg_lx9uM0SgKDis@your-neon-project-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 ```
 
-Configure environment variables for Neon, Neon Auth and Cloudflare as described in the repo docs. Make sure your database and auth are configured before running the app.
+You can get your environment variables for Neon, Neon Auth and Cloudflare in `NEON_GUIDE.md` and `CLOUDFLARE_GUIDE.md`.
 
 ### Promoting an Admin
 
