@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/server';
-import { dbClient, createAuthedClient } from '@/lib/neon/client';
+import { createAuthedClient } from '@/lib/neon/client';
 import { sql } from '@/lib/neon/server';
 import { deleteForwardEmailDNS, listForwardEmailDNS } from '@/lib/cloudflare';
 
