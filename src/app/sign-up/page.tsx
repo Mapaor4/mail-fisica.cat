@@ -22,9 +22,9 @@ export default function SignUpPage() {
             <Image
               src={organizationLogoSvgPath}
               alt={`${APEX_DOMAIN} organization logo`}
-              width={220}
-              height={64}
-              className="h-12 w-auto mx-auto mb-4"
+              width={240}
+              height={72}
+              className="h-14 w-auto mx-auto mb-4"
               priority
             />
           )}
