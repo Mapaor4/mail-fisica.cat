@@ -8,7 +8,7 @@ ForwardEmail has a generous free tier that allows us the main 2 things we're int
 - Forwarding incoming emails to personal inboxes (like Gmail, Outlook, etc.) so that we don't miss any mail (this website has no desktop app nor mobile app and therefore no push notifications).
 - Sending incoming emails content to a webhook so we can store those emails on a database (and display them in our Web Application).
 
-To set up ForwardEmail we go to their [site](https://forwardemail.net/en/my-account/domains) and add our domain, choose the Free Tier and verify the domain by adding two MX records (to `mx1.forwardemail.net` and `mx2.forwardemail.net`). Once verified we can start forwarding emails.
+To set up ForwardEmail we go to their [site](https://forwardemail.net/en/my-account/domains), and sign up (important to choose the email wisely as you won't be able to use that email for other forward email accounts. So for each normal mail, you get a forward email account, and from a forward email account you can then use you custom mail to register to other websites like smtp2go, neon, etc.), after signing up we add our domain, choose the Free Tier and verify the domain by adding two MX records (to `mx1.forwardemail.net` and `mx2.forwardemail.net`). Once verified we can start forwarding emails.
 
 In the Free Tier the only way to forward emails is via DNS. Common use cases are explained in their [FAQs](https://forwardemail.net/en/faq#how-do-i-get-started-and-set-up-email-forwarding).
 
