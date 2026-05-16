@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -26,7 +26,35 @@ export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dnsWarning, setDnsWarning] = useState<string | null>(null);
+  const [aliasStatus, setAliasStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'error'>('idle');
+  const [aliasMessage, setAliasMessage] = useState<string | null>(null);
   const router = useRouter();
+
+  const checkAliasAvailability = async (value: string, signal?: AbortSignal) => {
+    const sanitized = value.toLowerCase().replace(/[^a-z0-9.-]/g, '');
+
+    if (sanitized.length < 2) {
+      return { status: 'idle' as const, message: null };
+    }
+
+    const response = await fetch(`/api/alias-availability?alias=${encodeURIComponent(sanitized)}`, {
+      signal,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        status: 'error' as const,
+        message: data.error || 'Unable to check alias availability',
+      };
+    }
+
+    return {
+      status: data.available ? ('available' as const) : ('taken' as const),
+      message: data.message || (data.available ? 'Alias is available' : 'Alias is already taken'),
+    };
+  };
 
   /**
    * Handle alias input change with sanitization and debounced availability check
@@ -35,8 +63,42 @@ export default function SignUpForm() {
     // Only allow lowercase letters, numbers, dots, and hyphens
     const sanitized = value.toLowerCase().replace(/[^a-z0-9.-]/g, '');
     setAlias(sanitized);
-
+    setError(null);
   };
+
+  useEffect(() => {
+    if (alias.length < 2) {
+      setAliasStatus('idle');
+      setAliasMessage(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const timeoutId = window.setTimeout(async () => {
+      setAliasStatus('checking');
+      setAliasMessage('Checking availability...');
+
+      try {
+        const result = await checkAliasAvailability(alias, controller.signal);
+        setAliasStatus(result.status);
+        setAliasMessage(result.message);
+      } catch (checkError) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.error('Alias availability check failed:', checkError);
+        setAliasStatus('error');
+        setAliasMessage('Unable to check alias availability');
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [alias]);
 
   /**
    * Handle form submission - create user and DNS record
@@ -87,6 +149,33 @@ export default function SignUpForm() {
     // Validation
     if (alias.length < 2) {
       setError('Alias must be at least 2 characters');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const aliasCheck = await checkAliasAvailability(alias);
+
+      if (aliasCheck.status === 'taken') {
+        setError('That alias is already taken');
+        setAliasStatus('taken');
+        setAliasMessage(aliasCheck.message);
+        setLoading(false);
+        return;
+      }
+
+      if (aliasCheck.status === 'error') {
+        setError(aliasCheck.message || 'Unable to check alias availability');
+        setAliasStatus('error');
+        setAliasMessage(aliasCheck.message);
+        setLoading(false);
+        return;
+      }
+    } catch (aliasCheckError) {
+      console.error('Final alias availability check failed:', aliasCheckError);
+      setError('Unable to check alias availability');
+      setAliasStatus('error');
+      setAliasMessage('Unable to check alias availability');
       setLoading(false);
       return;
     }
@@ -197,6 +286,19 @@ export default function SignUpForm() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Your email will be: <strong>{alias || 'alias'}@{APEX_DOMAIN}</strong>
           </p>
+          {aliasMessage && alias.length >= 2 && (
+            <p
+              className={`text-sm mt-1 ${
+                aliasStatus === 'available'
+                  ? 'text-green-600 dark:text-green-400'
+                  : aliasStatus === 'taken' || aliasStatus === 'error'
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {aliasMessage}
+            </p>
+          )}
         </div>
 
         {/* Password Field */}
